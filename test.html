@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Alchemy Block Invaders - Test</title>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; padding: 20px; background: #0a1929; color: #5eead4; font-family: monospace; }
+    .pass { color: #5eead4; }
+    .fail { color: #ff6b6b; }
+    .log { margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.5); border-left: 3px solid #5eead4; }
+  </style>
+</head>
+<body>
+  <h1>Alchemy Block Invaders - Startup Test</h1>
+  <div id="logs"></div>
+
+  <canvas id="gameCanvas" style="display: none;"></canvas>
+
+  <script>
+    const logs = [];
+
+    function log(msg, isError = false) {
+      logs.push({ msg, isError });
+      const div = document.createElement('div');
+      div.className = `log ${isError ? 'fail' : 'pass'}`;
+      div.textContent = (isError ? '✗ ' : '✓ ') + msg;
+      document.getElementById('logs').appendChild(div);
+      console.log(msg);
+    }
+
+    try {
+      log('DOM loaded');
+      log('Canvas element found: ' + !!document.getElementById('gameCanvas'));
+      log('Page structure ready');
+    } catch (e) {
+      log('Error in pre-script: ' + e.message, true);
+    }
+  </script>
+
+  <script src="game-v2.js"></script>
+
+  <script>
+    // Test after script loads
+    setTimeout(() => {
+      try {
+        log('game-v2.js loaded successfully');
+        log('ALCHEMY object exists: ' + (typeof ALCHEMY !== 'undefined'));
+        log('gameState object exists: ' + (typeof gameState !== 'undefined'));
+        log('gamePhase = ' + gamePhase);
+        log('Selected glyph: ' + (gameState.selectedGlyph || 'none yet'));
+
+        // Try to find key DOM elements
+        const canvas = document.getElementById('gameCanvas');
+        const preGame = document.getElementById('preGameScreen');
+        const gameContainer = document.getElementById('gameContainer');
+        const startBtn = document.getElementById('startButton');
+        const tomeBtn = document.getElementById('tomeButton');
+
+        log('Canvas element: ' + (canvas ? 'found' : 'NOT FOUND'), !canvas);
+        log('Pre-game screen: ' + (preGame ? 'found' : 'NOT FOUND'), !preGame);
+        log('Game container: ' + (gameContainer ? 'found' : 'NOT FOUND'), !gameContainer);
+        log('Start button: ' + (startBtn ? 'found' : 'NOT FOUND'), !startBtn);
+        log('Tome button: ' + (tomeBtn ? 'found' : 'NOT FOUND'), !tomeBtn);
+
+        log('✓ GAME READY - Select a glyph to begin');
+      } catch (e) {
+        log('Error after script load: ' + e.message, true);
+        log('Stack: ' + e.stack, true);
+      }
+    }, 100);
+  </script>
+</body>
+</html>

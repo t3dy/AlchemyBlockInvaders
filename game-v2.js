@@ -361,6 +361,81 @@ function updateHUD() {
   document.getElementById('zodiacPhase').textContent = zodiacInfo.process;
 }
 
+// ===== TOME SYSTEM =====
+const tomeButton = document.getElementById('tomeButton');
+const tomeModal = document.getElementById('tomeModal');
+const tomeClose = document.getElementById('tomeClose');
+
+tomeButton.addEventListener('click', () => {
+  tomeModal.classList.add('active');
+  renderTomeEntries();
+});
+
+tomeClose.addEventListener('click', () => {
+  tomeModal.classList.remove('active');
+});
+
+tomeModal.addEventListener('click', (e) => {
+  if (e.target === tomeModal) tomeModal.classList.remove('active');
+});
+
+function renderTomeEntries() {
+  const container = document.getElementById('tomeEntries');
+  container.innerHTML = '';
+
+  // Principles section
+  const principlesDiv = document.createElement('div');
+  principlesDiv.className = 'tome-section';
+  principlesDiv.innerHTML = '<div class="tome-section-title">Elemental Principles</div>';
+
+  const elementPrinciples = {
+    fire: 'Fire is the active principle of transformation. It consumes and transmutes all it touches.',
+    water: 'Water is the solvent. It moves where fire is rigid, and dissolves where fire burns.',
+    air: 'Air is the dispersive carrier. It rises and spreads, carrying volatile essences.',
+    earth: 'Earth is the vessel and foundation. All transformations settle into earth form.'
+  };
+
+  Object.entries(elementPrinciples).forEach(([elem, desc]) => {
+    const entry = document.createElement('div');
+    entry.className = 'tome-entry';
+    entry.innerHTML = `
+      <div class="tome-entry-title">${ALCHEMY.elements[elem].emoji} ${ALCHEMY.elements[elem].name}</div>
+      <p class="tome-entry-desc">${desc}</p>
+    `;
+    principlesDiv.appendChild(entry);
+  });
+  container.appendChild(principlesDiv);
+
+  // Discovered reactions section
+  const reactionsDiv = document.createElement('div');
+  reactionsDiv.className = 'tome-section';
+  reactionsDiv.innerHTML = '<div class="tome-section-title">Discovered Reactions</div>';
+
+  if (Object.keys(gameState.discoveredReactions).length === 0) {
+    const noReactions = document.createElement('div');
+    noReactions.className = 'tome-entry';
+    noReactions.innerHTML = '<p class="tome-entry-desc">No reactions discovered yet. Fire bullets at blocks to begin your learning.</p>';
+    reactionsDiv.appendChild(noReactions);
+  } else {
+    Object.keys(gameState.discoveredReactions).forEach(reactionKey => {
+      const [elem1, elem2] = reactionKey.split('-');
+      const el1 = ALCHEMY.elements[elem1] || ALCHEMY.planets[elem1];
+      const el2 = ALCHEMY.elements[elem2] || ALCHEMY.planets[elem2];
+
+      if (el1 && el2) {
+        const entry = document.createElement('div');
+        entry.className = 'tome-entry';
+        entry.innerHTML = `
+          <div class="tome-entry-title">${el1.emoji} + ${el2.emoji}</div>
+          <p class="tome-entry-desc">A reaction between ${el1.name} and ${el2.name} has been discovered.</p>
+        `;
+        reactionsDiv.appendChild(entry);
+      }
+    });
+  }
+  container.appendChild(reactionsDiv);
+}
+
 // ===== CHARACTER SHEET =====
 const characterButton = document.getElementById('characterButton');
 const characterModal = document.getElementById('characterModal');
