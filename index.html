@@ -16,6 +16,125 @@
       overflow: hidden;
     }
 
+    .screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    #preGameScreen {
+      background: linear-gradient(135deg, #0a1929 0%, #1a2845 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .pre-game-content {
+      text-align: center;
+      max-width: 700px;
+      padding: 40px;
+    }
+
+    .pre-game-content h1 {
+      font-size: 48px;
+      margin: 0 0 10px;
+      color: #5eead4;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #a7c9c2;
+      margin: 0 0 40px;
+    }
+
+    .glyph-selection h2 {
+      font-size: 20px;
+      color: #5eead4;
+      margin: 0 0 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .glyph-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .glyph-button {
+      padding: 20px;
+      background: rgba(94, 234, 212, 0.1);
+      border: 2px solid rgba(94, 234, 212, 0.3);
+      border-radius: 8px;
+      color: #ecfeff;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      font-size: 12px;
+    }
+
+    .glyph-button:hover {
+      background: rgba(94, 234, 212, 0.2);
+      border-color: #5eead4;
+    }
+
+    .glyph-button.selected {
+      background: rgba(94, 234, 212, 0.3);
+      border-color: #5eead4;
+      box-shadow: 0 0 20px rgba(94, 234, 212, 0.5);
+    }
+
+    .glyph-emoji {
+      font-size: 32px;
+    }
+
+    .glyph-name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .glyph-desc {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .start-button {
+      padding: 14px 40px;
+      background: #5eead4;
+      border: none;
+      border-radius: 6px;
+      color: #0a1929;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .start-button:hover:not(:disabled) {
+      background: #4dd0ac;
+      box-shadow: 0 0 20px rgba(94, 234, 212, 0.5);
+    }
+
+    .start-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     #gameContainer {
       position: relative;
       width: 100vw;
@@ -40,16 +159,38 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(10, 25, 41, 0.6);
+      background: rgba(10, 25, 41, 0.8);
       border-bottom: 1px solid rgba(94, 234, 212, 0.2);
-      font-size: 14px;
+      font-size: 12px;
       z-index: 10;
+      gap: 20px;
     }
 
     .hud-left, .hud-right {
       display: flex;
-      gap: 24px;
+      gap: 20px;
       align-items: center;
+    }
+
+    .zodiac-indicator {
+      flex: 1;
+      text-align: center;
+      border-left: 1px solid rgba(94, 234, 212, 0.2);
+      border-right: 1px solid rgba(94, 234, 212, 0.2);
+      padding: 0 20px;
+    }
+
+    .zodiac-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #5eead4;
+    }
+
+    .zodiac-phase {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .stat {
@@ -71,20 +212,24 @@
       color: #5eead4;
     }
 
-    .tome-button {
-      padding: 8px 16px;
+    .tome-button, .character-button {
+      padding: 8px 12px;
       background: rgba(94, 234, 212, 0.15);
       border: 1px solid rgba(94, 234, 212, 0.5);
       border-radius: 4px;
       color: #5eead4;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 16px;
       font-weight: 600;
-      text-transform: uppercase;
       transition: all 0.2s;
+      min-width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .tome-button:hover {
+    .tome-button:hover, .character-button:hover {
       background: rgba(94, 234, 212, 0.25);
       border-color: #5eead4;
     }
@@ -262,35 +407,218 @@
     .game-over button:hover {
       background: #ff5252;
     }
+
+    .character-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      overflow: auto;
+    }
+
+    .character-modal.active {
+      display: block;
+    }
+
+    .character-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 35, 55, 0.95);
+      border: 1px solid rgba(94, 234, 212, 0.4);
+      border-radius: 8px;
+      width: 90vw;
+      max-width: 600px;
+      max-height: 80vh;
+      padding: 32px;
+      overflow-y: auto;
+      box-shadow: 0 0 40px rgba(94, 234, 212, 0.1);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #5eead4;
+      font-size: 28px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .character-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 24px;
+      color: #5eead4;
+    }
+
+    .character-stat-group {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(94, 234, 212, 0.2);
+    }
+
+    .character-stat-group:last-child {
+      border-bottom: none;
+    }
+
+    .character-stat-label {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .character-stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #5eead4;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(94, 234, 212, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #5eead4;
+      transition: width 0.3s;
+    }
+
+    .affinity-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .affinity-item {
+      padding: 10px;
+      background: rgba(10, 25, 41, 0.5);
+      border: 1px solid rgba(94, 234, 212, 0.2);
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+      .glyph-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .hud {
+        font-size: 11px;
+        padding: 8px 12px;
+        gap: 12px;
+      }
+
+      .zodiac-indicator {
+        padding: 0 12px;
+      }
+
+      canvas {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="gameContainer">
+  <div id="preGameScreen" class="screen active">
+    <div class="pre-game-content">
+      <h1>Alchemy Block Invaders</h1>
+      <p class="subtitle">Choose your alchemical focus to begin your initiation</p>
+
+      <div class="glyph-selection">
+        <h2>Select Shield Glyph</h2>
+        <div class="glyph-grid">
+          <button class="glyph-button" data-glyph="fire">
+            <div class="glyph-emoji">🔥</div>
+            <div class="glyph-name">Fire</div>
+            <div class="glyph-desc">+1.5× Fire reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="water">
+            <div class="glyph-emoji">💧</div>
+            <div class="glyph-name">Water</div>
+            <div class="glyph-desc">+1.5× Water reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="air">
+            <div class="glyph-emoji">🌬️</div>
+            <div class="glyph-name">Air</div>
+            <div class="glyph-desc">+1.5× Air reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="earth">
+            <div class="glyph-emoji">🌍</div>
+            <div class="glyph-name">Earth</div>
+            <div class="glyph-desc">+1.5× Earth reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="sun">
+            <div class="glyph-emoji">☉</div>
+            <div class="glyph-name">Sun</div>
+            <div class="glyph-desc">+2× reaction XP (premium)</div>
+          </button>
+          <button class="glyph-button" data-glyph="moon">
+            <div class="glyph-emoji">☽</div>
+            <div class="glyph-name">Moon</div>
+            <div class="glyph-desc">Mirror & double effects</div>
+          </button>
+          <button class="glyph-button" data-glyph="random">
+            <div class="glyph-emoji">?</div>
+            <div class="glyph-name">Surprise</div>
+            <div class="glyph-desc">Random glyph chosen</div>
+          </button>
+        </div>
+      </div>
+
+      <button class="start-button" id="startButton" disabled>Begin Your Initiation</button>
+    </div>
+  </div>
+
+  <div id="gameContainer" class="screen">
     <div class="hud">
       <div class="hud-left">
         <div class="stat">
-          <div class="stat-label">Score</div>
-          <div class="stat-value" id="scoreDisplay">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Health</div>
-          <div class="stat-value" id="healthDisplay">3</div>
+          <div class="stat-label">XP / Level</div>
+          <div class="stat-value" id="xpDisplay">0 / App</div>
         </div>
         <div class="stat">
           <div class="stat-label">Wave</div>
           <div class="stat-value" id="waveDisplay">1</div>
         </div>
+        <div class="stat">
+          <div class="stat-label">Health</div>
+          <div class="stat-value" id="healthDisplay">3</div>
+        </div>
       </div>
 
-      <div class="elemental-affinity">
-        <div class="element-indicator fire" title="Fire">🔥</div>
-        <div class="element-indicator water" title="Water">💧</div>
-        <div class="element-indicator air" title="Air">🌬️</div>
-        <div class="element-indicator earth" title="Earth">🌍</div>
+      <div class="zodiac-indicator">
+        <div class="zodiac-name" id="zodiacName">♈ Aries</div>
+        <div class="zodiac-phase" id="zodiacPhase">Calcination</div>
       </div>
 
       <div class="hud-right">
-        <button class="tome-button" id="tomeButton">📖 Tome</button>
+        <button class="tome-button" id="tomeButton">📖</button>
+        <button class="character-button" id="characterButton">👤</button>
       </div>
     </div>
 
@@ -311,6 +639,14 @@
     <button onclick="location.reload()">Play Again</button>
   </div>
 
-  <script src="game.js"></script>
+  <div class="character-modal" id="characterModal">
+    <div class="character-content">
+      <button class="modal-close" id="characterClose">&times;</button>
+      <h2 class="character-title">Your Alchemical Journey</h2>
+      <div id="characterStats"></div>
+    </div>
+  </div>
+
+  <script src="game-v2.js"></script>
 </body>
 </html>
