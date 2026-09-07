@@ -21,7 +21,7 @@ workspace hosting policy that makes Pages correct and Vercel wrong for this proj
 | path | what |
 |---|---|
 | `/` | the hub — what the games are for, and the controls for each |
-| `/invaders/` | Alchemy Block Invaders |
+| `/invaders/` | Alchemy Block Invaders (v3 - 26 glyph blocks, cascades, spells, the Cabinet) |
 | `/novaheat/` | Nova Heat |
 | `/circulatio/` | Circulatio |
 | `/salamandra/` | Salamandra |
@@ -43,8 +43,9 @@ That must print nothing.
 
 ## The cache gotcha
 
-`invaders/index.html` loads its script as `game-v2.js?v=3`. **Bump that number whenever
-`game-v2.js` changes.** Without it a browser holding an earlier build keeps running the
+`invaders/index.html` loads four scripts with `?v=` queries - `glyphs.js`, `cascade.js`,
+`spells.js` and `game-v3.js`. **Bump the number on any of them you change.**
+(`game-v2.js` is superseded and nothing loads it.) Without it a browser holding an earlier build keeps running the
 old game, and the fix you just deployed appears not to have worked. The local dev servers
 in `.claude/launch.json` all pass `-c-1` for the same reason.
 
@@ -99,3 +100,8 @@ resize_window { width: 1100, height: 800 }
 
 This is the fifth time a zero viewport has been mistaken for a game bug in this workspace.
 Set the size before drawing any conclusion about a game that dies immediately.
+
+## Shared code
+
+`shared/help.js` is loaded by all four games as `../shared/help.js`. It is the only file
+outside a game directory that the site serves, and it must stay relative like everything else.

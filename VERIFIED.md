@@ -457,3 +457,95 @@ load the right matter and hold it.
 | earlier: survives at the gate without opening it | the hold expires, **THE WORK IS UNFINISHED** |
 
 Three distinct endings, each reachable, each named honestly. No run can stall.
+
+
+---
+
+# 2026-09-07 (later) - v3: the glyphs, the cascades, the Cabinet, the teaching layer
+
+Driven **on the deployed site**, https://t3dy.github.io/AlchemyBlockInvaders/invaders/, with a
+1200x860 viewport set first (see the trap below).
+
+## The twenty-six blocks
+
+Every glyph struck in isolation with a fire shot. **No block threw.** Chain depths and the
+correct refusals both came out as designed:
+
+| block | result |
+|---|---|
+| Fire | chain of **13** - ignition spreads on its own |
+| Venus / copper | chain of **16** - the bell triggers everything within three cells |
+| Mars / iron | chain of **11** - detonates along row and column |
+| Sol / gold | **absorbed.** Survives fire; dies only to a gold shot |
+| Luna / silver | **reflected.** Survives fire; dies only to a silver shot |
+| Salt | **grew.** Survives fire; dies only to water |
+| Mercury | **fled.** Teleports rather than dying; dies once COAGULA has frozen it |
+| Jupiter / tin | **swelled** 1, then 2, then burst on the third strike |
+| Saturn / lead | absorbed; slowed its neighbours |
+| Virgo | split into a spirit above and a residue below (block count went *up*) |
+| Capricorn | raised the recently dead back as gold (count went up by 2) |
+| Aquarius | copied its neighbour |
+
+That is the whole design thesis holding: **a player who knows what the glyph means can
+predict what the block does.**
+
+## The cascade engine
+
+| | |
+|---|---|
+| longest chain, live wave run | **43 blocks from one shot** |
+| longest chain, local run | 37 |
+| exceptions thrown | none |
+| runaway chains | none - one trigger per block per chain, 400-effect cap |
+
+## The Cabinet
+
+26 blocks, 26 distinct glyphs, laid out in labelled bays. 600 frames of doing nothing: lives
+still 3, run not over, all 26 present. Bays refill 3.5s after being broken.
+
+## Wave mode
+
+Live run: **39 seconds, wave 5, score 7420**, longest chain 43, proper game over with the
+overlay showing the right numbers. No exceptions.
+
+## The teaching layer, in all four games
+
+| game | mounted | the thing it had to explain |
+|---|---|---|
+| Invaders | yes | "how to fire off a power-up" section present in the manual |
+| Salamandra | yes | Shift named in both the hint strip and the manual |
+| Nova Heat | yes | the inhale window explained in the manual |
+| Circulatio | yes | "Space twice" called out in the hint strip |
+
+All four games still play with the layer installed: Salamandra still opens its lock and flies
+through at 92s; Nova Heat still scorches out at 32s untouched and scored 1770 played;
+Circulatio still opens its cup and sinks the ball.
+
+## Bugs found and fixed this round
+
+- **SOLVE did not unmake salt pillars**, though its own teaching text and the manual both
+  promised it. It set `hp = 0`, and nothing outside the cascade re-reads `hp`, so the pillar
+  stood. Now struck dead in the spell itself.
+- **The control grids broke their own layout.** A `.kv` row is a two-column grid, so a row
+  containing two `<kbd>` elements contributed three children and shunted every later row
+  sideways. Both the start screen and the generated manual had it.
+- **The Cabinet did not fit the screen.** Six rows at a fixed gutter put the last bay below
+  the vessel and off the bottom. The gutter is now computed from the viewport.
+- **Bay captions collided.** "SAGITTARIUS - INCINERATIO" at full length overlapped both its
+  neighbours. Short name always; the full name and the behaviour only for the bay the vessel
+  is standing under.
+
+## The trap, for the fifth time
+
+A hidden browser pane reports **`innerWidth: 0`** and suspends `requestAnimationFrame`. On the
+first live test of the invaders game that produced a run lasting 0.4 seconds with a score of
+zero, which looks exactly like a broken deployment. It is not: with a real viewport the same
+build plays to wave 5. **Set the viewport before concluding anything.**
+
+```
+resize_window { width: 1200, height: 860 }
+```
+
+Screenshots of the deployed page also timed out repeatedly in this pane while the DOM and the
+game state were both perfectly readable. Where a screenshot would have been the evidence, the
+numbers above were taken instead.
