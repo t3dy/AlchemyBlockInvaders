@@ -623,3 +623,66 @@ it says nothing fixed it. Two archetypes were also swallowing more than half the
 because "legion" appears in every single entry ("he governeth N Legions") and "shape" appears
 in almost every appearance ("appeareth in the form of"). Both now require the office to be
 about commanding men in arms, or about transforming somebody else.
+
+
+---
+
+# 2026-09-07 - the devices of the seventy-two, and a correction on copyright
+
+## The seals could not be used, and the reason is not copyright
+
+The plan was to use the extracted seals in `GoetiaRevEng`. They cannot be used as they stand,
+and the blocker is **accuracy, not rights**. The plate they come from is public domain.
+
+`docs/sigil_database.json` embeds a seal image in each spirit's row, which looks authoritative
+because the row carries the spirit's id and name. It is not. Each crop straddles two captions -
+the one belonging to the seal above it and its own - and the rows are shifted against their
+labels **by a varying amount**:
+
+| row | the seal it carries is captioned | offset |
+|---|---|---|
+| `id: 1, name: Bael` | "10. Buer" | 9 |
+| `id: 20, name: Purson` | "27. Ronove" | 7 |
+
+Nine, then seven. A constant offset could have been corrected in a line; a varying one cannot,
+not without re-cutting all seventy-two from a clean scan and reading every caption. There are
+also 78 images for 72 spirits. `16_verify_mapping.py` exists in that project because its author
+hit the same wall.
+
+Shipping them would have put the wrong seal on most of the hierarchy, in a project whose whole
+claim is fidelity. Recorded as a RESEARCHER task in `C:\Dev\PIPELINE.md` instead.
+
+## What ships instead
+
+`invaders/seal-draw.js` draws **our own device** for each spirit, and the game says on screen
+that it is not a reproduction. It is not arbitrary: every part is read off that spirit's
+attested attributes.
+
+| part of the device | what it encodes |
+|---|---|
+| the ring | the circle of art, always |
+| the spokes | its legions, one per five - Bael's 66 bristle, a thin command is sparse |
+| the terminals | its RANK. King crowned bars, Prince orbs, Duke forks, Marquis hooks, Earl arrows, President dots, Knight blades |
+| the triangle | its ELEMENT, as the alchemical sign, with the bar for air and earth |
+| the centre | its PLANET's own glyph |
+| the limbs | a flourish deterministic from its number, so no two are alike |
+
+**Verified:** deterministic (the same spirit always draws the same device), 24 of 24 sampled
+devices distinct, all 72 render without throwing, spoke counts span 5 to 14 across the
+hierarchy. Drawn on the board, in the reading panel at 300px, and in the roster at 23px.
+
+## The copyright position, corrected
+
+Ted pushed back on an earlier draft of this and was right. What that draft got wrong:
+
+- **The early modern text cannot be copyrighted.** Rudd's Harley MS 6483 is a seventeenth-
+  century manuscript. A modern editor's faithful transcription of it adds no new authorship.
+- **Quotation from a copyrighted edition is fair use** when short, attributed, and in service
+  of comment or scholarship - which is what a game teaching its sources is doing. Quote
+  Skinner & Rankine by name and page where their reading differs; do not paraphrase a citation
+  away out of nervousness.
+- **A public-domain edition is preferred for BULK text for practical reasons** - clean,
+  complete, already transcribed - not legal ones.
+
+The in-game provenance and `goetia-text.json` both now say this accurately rather than
+implying the 1904 text was chosen to avoid a legal problem that did not exist.

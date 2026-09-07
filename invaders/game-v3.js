@@ -596,8 +596,21 @@ function showSpirit(g) {
     '<p style="font-size:12px;opacity:.85;max-width:74ch">' +
     '<b>' + g.power.name + '</b> — ' + g.power.teach + '</p>';
 
+  const sealImg = $('spiritSeal');
+  if (sealImg) { sealImg.src = sealDataURL(g, 300, '#f0e6d2', '#12100c'); sealImg.alt = 'device of ' + g.name; }
+
   $('spiritText').textContent = g.text;
-  $('spiritProv').innerHTML = (GOETIA_DOC ? GOETIA_DOC.source : '') +
+  $('spiritProv').innerHTML =
+    '<b>The device above is our own drawing, not a reproduction of the historical seal.</b> ' +
+    'Every part of it is read off this spirit’s attested attributes: the spokes are its ' +
+    'legions (one per five), their terminals are its rank, the triangle is its element and the ' +
+    'glyph at the centre is its planet.<br>' +
+    '<i>Why not the historical seal? Not copyright — the plate is public domain. The ' +
+    'extraction available to us is misaligned against its labels by a varying amount (the row ' +
+    'marked Bael carries a seal captioned "10. Buer"; the row marked Purson carries "27. ' +
+    'Ronové"), so a real seal could not be shown without risk of showing the wrong ' +
+    'one.</i><br><br>' +
+    (GOETIA_DOC ? GOETIA_DOC.source : '') +
     (g.repaired ? ' <br><i>Note: the scan of this entry drops its header line; only the standard opening clause has been restored.</i>' : '') +
     (GOETIA_DOC ? '<br>' + GOETIA_DOC.transcription_note : '');
   $('spiritScreen').classList.add('show');
@@ -608,7 +621,7 @@ function buildRoster() {
   if (!host || !GOETIA.length) return;
   host.innerHTML = GOETIA.map(g =>
     '<div class="rosterrow" data-id="' + g.id + '">' +
-      '<span class="rn">' + g.id + '</span>' +
+      '<span class="rn"><img src="' + sealDataURL(g, 46, '#cbbfa6') + '" width="23" height="23" alt=""></span>' +
       '<span class="rname">' + g.name + '</span>' +
       '<span class="rrank">' + g.rank + '</span>' +
       '<span class="rweak">' + g.opensTo.map(k => GLYPHS[k].glyph).join(' ') +
@@ -778,26 +791,17 @@ function draw() {
     ctx.translate(spirit.x, spirit.y);
     const R = 26;
     ctx.globalAlpha = spirit.vulnerable ? 1 : 0.55;
-    ctx.fillStyle = spirit.flash > 0 ? '#f5c518' : '#2a1c22';
-    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = spirit.vulnerable ? '#f5c518' : '#6b5b45';
-    ctx.lineWidth = spirit.vulnerable ? 2.5 : 1.5;
-    ctx.stroke();
-    // a ring of marks for the legions it commands
-    const marks = Math.min(24, Math.round(spirit.legions / 3));
-    ctx.strokeStyle = 'rgba(245,197,24,.5)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < marks; i++) {
-      const a = (i / marks) * Math.PI * 2 + spirit.t * 0.4;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * (R + 5), Math.sin(a) * (R + 5));
-      ctx.lineTo(Math.cos(a) * (R + 11), Math.sin(a) * (R + 11));
-      ctx.stroke();
-    }
-    ctx.fillStyle = '#f0e6d2';
-    ctx.font = '20px "Courier New", monospace';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(spirit.power.glyph, 0, 1);
+    // the dark ground it stands on
+    ctx.fillStyle = spirit.flash > 0 ? '#f5c518' : '#191016';
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.42, 0, Math.PI * 2); ctx.fill();
+    // its own device, drawn from its attributes
+    ctx.save();
+    ctx.rotate(spirit.t * 0.16);
+    drawSeal(ctx, spirit, R, {
+      ink: spirit.vulnerable ? '#f5c518' : '#8d7a55',
+      lineWidth: spirit.vulnerable ? 1.7 : 1.2
+    });
+    ctx.restore();
     ctx.globalAlpha = 1;
     ctx.fillStyle = 'rgba(240,230,210,.85)';
     ctx.font = '9.5px "Courier New", monospace';
@@ -1092,7 +1096,7 @@ function frame(now) {
 // ===================================================================
 // The roster loads asynchronously; the game is playable before it arrives and
 // the first gate wave simply waits for it.
-fetch('goetia-text.json?v=2')
+fetch('goetia-text.json?v=3')
   .then(r => r.json())
   .then(doc => { GOETIA_DOC = doc; GOETIA = buildGoetia(doc); buildRoster(); })
   .catch(() => { GOETIA = []; });
