@@ -4,8 +4,59 @@
     {
       "name": "alchemy-invaders",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["http-server", "-p", "3001"],
+      "runtimeArgs": [
+        "http-server",
+        "-p",
+        "3001",
+        "-c-1"
+      ],
       "port": 3001
+    },
+    {
+      "name": "novaheat",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "http-server",
+        "-p",
+        "3003",
+        "-c-1"
+      ],
+      "port": 3003
+    },
+    {
+      "name": "circulatio",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "http-server",
+        "-p",
+        "3004",
+        "-c-1"
+      ],
+      "port": 3004
+    },
+    {
+      "name": "alchemy-block-shooter",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "http-server",
+        "C:/Dev/ALCHEMYBLOCKSHOOTER",
+        "-p",
+        "3010",
+        "-c-1"
+      ],
+      "port": 3010
+    },
+    {
+      "name": "salamandra",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "http-server",
+        "C:/Dev/AlchemyBlockInvaders/salamandra",
+        "-p",
+        "3005",
+        "-c-1"
+      ],
+      "port": 3005
     }
   ]
 }

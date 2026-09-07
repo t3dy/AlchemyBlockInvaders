@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SALAMANDRA</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #16110d; color: #f4e9d2;
+    font-family: "Courier New", ui-monospace, monospace;
+    user-select: none;
+  }
+  #game { display: block; width: 100vw; height: 100vh; }
+
+  /* ---------- power bar (Gradius) ---------- */
+  #bar {
+    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; z-index: 10;
+  }
+  #bar .slot {
+    border: 1px solid #6b5b45; padding: 5px 11px; font-size: 10px; letter-spacing: .14em;
+    color: #9c8a6d; background: rgba(22,17,13,.85); text-align: center; min-width: 74px;
+  }
+  #bar .slot small { display: block; font-size: 8px; opacity: .7; letter-spacing: .06em; }
+  #bar .slot.on { color: #16110d; background: #f5c518; border-color: #f5c518; }
+  #bar .slot.owned { border-color: #29a8e0; color: #29a8e0; }
+  #bar .slot.owned.on { color: #16110d; background: #f5c518; border-color: #f5c518; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position: fixed; top: 10px; left: 12px; z-index: 10;
+    font-size: 11px; letter-spacing: .13em; line-height: 1.7;
+  }
+  #hud b { font-size: 15px; font-variant-numeric: tabular-nums; }
+  #hud .dim { opacity: .55; font-size: 9.5px; letter-spacing: .16em; }
+
+  /* ---------- weapon ring ---------- */
+  #weapon {
+    position: fixed; top: 10px; right: 12px; z-index: 10; text-align: right;
+    border: 1px solid #6b5b45; background: rgba(22,17,13,.85); padding: 9px 11px; min-width: 250px;
+  }
+  #weapon .reg { font-size: 9px; letter-spacing: .2em; opacity: .55; }
+  #weapon .cur { font-size: 17px; letter-spacing: .1em; margin: 2px 0 6px; }
+  #weapon .cur span { font-size: 22px; margin-right: 8px; }
+  #ring { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; margin-bottom: 7px; }
+  #ring i {
+    font-style: normal; border: 1px solid #4b4034; width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: .5;
+  }
+  #ring i.on { opacity: 1; border-color: #f5c518; color: #f5c518; }
+  #weapon .note { font-size: 9.5px; opacity: .65; line-height: 1.5; text-align: left; }
+
+  /* ---------- reaction readout ---------- */
+  #reaction {
+    position: fixed; bottom: 62px; left: 12px; z-index: 10; width: 300px;
+    border: 1px solid #6b5b45; background: rgba(22,17,13,.9); padding: 9px 11px;
+    font-size: 10px; line-height: 1.55; display: none;
+  }
+  #reaction.show { display: block; }
+  #reaction h4 { margin: 0 0 3px; font-size: 11px; letter-spacing: .16em; color: #f5c518; }
+  #reaction .out { color: #29a8e0; letter-spacing: .1em; }
+
+  /* ---------- overlays ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(12,9,7,.95);
+  }
+  .overlay.show { display: flex; }
+  .panel { max-width: 700px; width: 100%; max-height: 88vh; overflow-y: auto;
+           border: 1px solid #6b5b45; padding: 26px 28px; }
+  .panel h1 { font-size: 28px; margin: 0 0 2px; letter-spacing: .24em; color: #e8402a; }
+  .panel .tag { font-size: 11px; letter-spacing: .16em; opacity: .6; margin: 0 0 18px; }
+  .panel p { font-size: 12.5px; line-height: 1.7; margin: 0 0 12px; }
+  .panel h2 { font-size: 11px; letter-spacing: .2em; opacity: .5; margin: 22px 0 8px; font-weight: 400; }
+  table.mx { width: 100%; border-collapse: collapse; font-size: 11px; }
+  table.mx th, table.mx td { text-align: left; padding: 4px 8px 4px 0; vertical-align: top; }
+  table.mx th { font-weight: 400; opacity: .5; font-size: 9.5px; letter-spacing: .14em; border-bottom: 1px solid #4b4034; }
+  table.mx td.g { font-size: 15px; width: 26px; }
+  table.mx td.k { color: #f5c518; white-space: nowrap; }
+  table.mx td.r { color: #29a8e0; }
+  .keys2 { display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; font-size: 11.5px; align-items: center; }
+  .keys2 kbd { border: 1px solid #6b5b45; padding: 1px 7px; font-size: 10.5px; white-space: nowrap; }
+  .btn { cursor: pointer; border: 1px solid #f5c518; background: transparent; color: #f5c518;
+         font: inherit; font-size: 12px; letter-spacing: .16em; padding: 10px 22px; margin-top: 20px; }
+  .btn:hover { background: rgba(245,197,24,.15); }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div><b id="score">0</b> <span class="dim">SCORE</span></div>
+  <div><b id="lives">3</b> <span class="dim">VESSELS</span></div>
+  <div><span id="seal" class="dim">NO SEAL</span></div>
+  <div><span id="progress" class="dim">0%</span></div>
+</div>
+
+<div id="weapon">
+  <div class="reg" id="wRegister">ELEMENTAL</div>
+  <div class="cur" id="wName"><span id="wGlyph">🜂</span>FIRE</div>
+  <div id="ring"></div>
+  <div class="note" id="wNote"></div>
+</div>
+
+<div id="reaction">
+  <h4 id="rxTitle"></h4>
+  <div id="rxBody"></div>
+  <div class="out" id="rxOut"></div>
+</div>
+
+<div id="bar"></div>
+
+<div class="overlay show" id="startScreen">
+  <div class="panel">
+    <h1>SALAMANDRA</h1>
+    <p class="tag">A flight through the burning body</p>
+    <p>The salamander is the creature that lives in fire, and <i>Salamander</i> is what
+       <b>Life Force</b> was called before it crossed the ocean. You fly an alembic through the
+       interior of the athanor, and the furnace is built.</p>
+    <p><b>The architecture is the puzzle.</b> Every structure in here is masonry of a particular
+       alchemical kind, and it answers to one thing only. Shoot it with the wrong matter and it
+       will absorb the shot, harden against you, grow, ignite, or throw it straight back. Shoot it
+       with what it yields to and it opens. Your gun is not one gun — it is eleven kinds of matter,
+       and choosing among them is most of the game.</p>
+    <h2>The reaction matrix</h2>
+    <table class="mx">
+      <tr><th></th><th>Masonry</th><th>Yields to</th><th>But reacts to</th></tr>
+      <tr><td class="g">▣</td><td>CALX WALL</td><td class="k">🜄 Water — slakes the lime</td><td class="r">🜂 Fire hardens it further</td></tr>
+      <tr><td class="g">▤</td><td>VITRIOL GATE</td><td class="k">🜂 Fire — melts the glass</td><td class="r">🜄 Water is reflected back</td></tr>
+      <tr><td class="g">▥</td><td>SALT PILLAR</td><td class="k">🜄 Water — dissolves it</td><td class="r">🜔 Salt makes it grow</td></tr>
+      <tr><td class="g">▲</td><td>SULPHUR VENT</td><td class="k">🜂 Fire — ignites, and it takes its neighbours with it</td><td class="r">🜁 Air jets flame down the lane</td></tr>
+      <tr><td class="g">◉</td><td>MERCURY VALVE</td><td class="k">☿ Mercury — only quicksilver closes it</td><td class="r">everything else passes straight through</td></tr>
+      <tr><td class="g">◐</td><td>LUNAR MIRROR</td><td class="k">☉ Sol — tarnishes the silver</td><td class="r">everything else is reflected at you</td></tr>
+      <tr><td class="g">▬</td><td>LEAD SHUTTER</td><td class="k">♂ Mars — iron cuts lead</td><td class="r">all else is swallowed</td></tr>
+      <tr><td class="g">◍</td><td>AIRY LATTICE</td><td class="k">🜁 Air — blows it apart</td><td class="r">🜃 Earth thickens it</td></tr>
+      <tr><td class="g">☀</td><td>SOLAR LOCK</td><td class="k">☉ Sol — nothing else touches gold</td><td class="r">the way out</td></tr>
+    </table>
+    <h2>Controls</h2>
+    <div class="keys2">
+      <kbd>W A S D</kbd><span>fly</span>
+      <kbd>Space</kbd><span>fire (hold)</span>
+      <kbd>C</kbd><span>next matter &mdash; <kbd>V</kbd> previous</span>
+      <kbd>1 2 3</kbd><span>jump to the Elemental, Principle or Astrological register</span>
+      <kbd>Shift</kbd><span>spend the power bar at the lit slot</span>
+      <kbd>P</kbd><span>pause</span>
+    </div>
+    <p style="opacity:.65">Capsules advance the bar along the bottom, as in the cabinet games this
+       is modelled on. The bar does not spend itself &mdash; you choose when, and where.</p>
+    <button class="btn" id="startBtn">Enter the Furnace</button>
+  </div>
+</div>
+
+<div class="overlay" id="overScreen">
+  <div class="panel" style="max-width:480px;">
+    <h1 id="overTitle" style="font-size:23px;">THE FIRE TOOK YOU</h1>
+    <p class="tag" id="overSub"></p>
+    <p id="overLine"></p>
+    <button class="btn" id="againBtn">Fly Again</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

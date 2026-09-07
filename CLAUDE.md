@@ -8,15 +8,56 @@
 
 ```
 AlchemyBlockInvaders/
-├── index.html           # Main HTML: game canvas, HUD, Tome modal, game-over screen
-├── game.js              # Complete game logic: engine, element system, reactions, tome
+├── index.html           # THE HUB. The site's front door: what the four games are
+│                        # trying to do, and the controls for each. Links to the
+│                        # four folders below. Not a game itself.
+├── invaders/
+│   ├── index.html       # Alchemy Block Invaders
+│   ├── game-v2.js       # THE SCRIPT THAT PAGE ACTUALLY LOADS. Shields, glyph
+│   │                    # selection, XP, the full alchemical system. Loaded with
+│   │                    # a ?v= query - bump it whenever this file changes, or a
+│   │                    # browser holding an earlier build keeps running it.
+│   ├── game.js          # The superseded MVP script. Nothing loads it. Kept for
+│   │                    # reference only; the line numbers quoted further down
+│   │                    # this document refer to IT, not to game-v2.js.
+│   └── test.html        # standalone assertions over the MVP script
+├── novaheat/            # Nova Heat        (game.js, classic script)
+├── circulatio/          # Circulatio       (src/*.js, ES modules + three.js)
+├── salamandra/          # Salamandra       (game.js, classic script)
 ├── .claude/
-│   └── launch.json      # Dev server config (npx serve)
+│   └── launch.json      # Dev servers, all with -c-1 so edits are never cached
+├── DEPLOY_STATE.md      # canonical URL, host, and the base-path gotcha. Read first
+├── VERIFIED.md          # Verification record: what was driven, and what it showed
 ├── README.md            # User-facing gameplay guide
 ├── DESIGN.md            # Complete design document with system details
 ├── TOME_ENTRIES.md      # All text content for the Spellbook
 └── CLAUDE.md            # This file
 ```
+
+**Every link on the hub is relative** (`invaders/`, `novaheat/`, ...), never
+root-absolute (`/invaders/`). GitHub Pages serves this repo from a subpath, so a
+leading slash resolves to the wrong place and 404s the whole site. See
+`DEPLOY_STATE.md`.
+
+## The other three games in this folder
+
+This directory holds four separate games, not one. The three below are independent, have
+their own loops, and are served from the same root.
+
+| folder | game | port | what it is |
+|---|---|---|---|
+| `invaders/` | **Alchemy Block Invaders** | 3001 | the original: shields, glyphs, the Tome |
+| `novaheat/` | **Nova Heat** | 3003 | Metatron's Cube; charge the circles, light the lines, hold back the Nova Mob. A Burroughs cut-up as a power |
+| `circulatio/` | **Circulatio** | 3004 | a bounce/golf engine whose **physics is a metaphysics** - Aristotelian, Paracelsian, Pythagorean and Lettrist rulesets change gravity, rebound and grip |
+| `salamandra/` | **Salamandra** | 3005 | a side-scrolling flight through the athanor; eleven kinds of matter against ten kinds of masonry |
+
+The root server on 3001 serves the whole directory, so the hub and all four games are
+reachable from it (`/`, `/invaders/`, `/novaheat/`, `/circulatio/`, `/salamandra/`) without
+starting the others.
+
+**Salamandra exposes `window.SAL` and Circulatio exposes `window.CIRC`** for headless
+verification. Read them through getters or live objects - see VERIFIED.md for why a captured
+reference goes stale, and for how to step these loops correctly.
 
 ## Game Architecture
 

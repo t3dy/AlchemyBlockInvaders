@@ -98,14 +98,42 @@ startButton.addEventListener('click', () => {
   }
 });
 
+let loopRunning = false;
+
 function startGame() {
+  // Pressing Begin twice used to start a SECOND animation loop on the
+  // same world: everything then updated twice a frame, the enemies came
+  // down at double speed and the game was lost in a few seconds. One
+  // loop, however many times the button is pressed.
+  if (gamePhase === 'playing') return;
+
+  // "Surprise — random glyph chosen" never chose one: the selection
+  // stayed the literal string 'random', which matches no element and no
+  // planet, so the shield drew a bare star and the wearer got no
+  // affinity bonus for the whole run. Choose for them.
+  if (gameState.selectedGlyph === 'random') {
+    const pool = Object.keys(ALCHEMY.elements).concat(Object.keys(ALCHEMY.planets));
+    gameState.selectedGlyph = pool[Math.floor(Math.random() * pool.length)];
+  }
+
   gamePhase = 'playing';
   document.getElementById('preGameScreen').classList.remove('active');
   document.getElementById('gameContainer').classList.add('active');
+  document.getElementById('gameOver').classList.remove('active');
+
+  // a fresh run starts fresh
+  gameState.gameOver = false;
+  gameState.score = 0;
+  gameState.health = 3;
   gameState.wave = 1;
   gameState.currentZodiac = 0;
+  bullets.length = 0;
+  enemies.length = 0;
+  player.x = canvas.width / 2;
+  player.shields.forEach(sh => { sh.hp = sh.maxHp; });
+
   enemySystem.spawn();
-  gameLoop();
+  if (!loopRunning) { loopRunning = true; gameLoop(); }
 }
 
 // ===== PLAYER SYSTEM =====
@@ -209,7 +237,11 @@ let enemies = [];
 const enemySystem = {
   spawn() {
     const blockTypes = [...Object.keys(ALCHEMY.elements), ...Object.keys(ALCHEMY.planets)];
-    const count = 4 + gameState.wave;
+    // Both of these used to climb for ever off the wave number. A long
+    // run reached wave 170, which spawned a hundred and seventy blocks
+    // at once and moved them eighty-eight pixels a frame — far enough to
+    // step straight over the shields without touching them.
+    const count = Math.min(18, 4 + gameState.wave);
 
     for (let i = 0; i < count; i++) {
       const type = blockTypes[Math.floor(Math.random() * blockTypes.length)];
@@ -220,7 +252,7 @@ const enemySystem = {
         y: -30,
         width: 40,
         height: 40,
-        speed: 2 + gameState.wave * 0.5,
+        speed: Math.min(7, 2 + gameState.wave * 0.35),
         type: type,
         isElement: !!isElement,
         health: 1
@@ -229,36 +261,45 @@ const enemySystem = {
   },
 
   update() {
-    enemies.forEach(enemy => {
-      enemy.y += enemy.speed;
-    });
+    for (const enemy of enemies) enemy.y += enemy.speed;
 
-    // Check collision with shields
+    // One pass, backwards, so a block is resolved exactly once.
+    //
+    // This loop used to do two things wrong. A block that met a shield
+    // was spliced once PER SHIELD, so the wrong blocks vanished; and a
+    // block past the bottom edge cost a life on EVERY FRAME it spent in
+    // the fifty-pixel band before it was culled — about twenty frames,
+    // which took all three lives in a fraction of a second. That is the
+    // game over that appeared the moment anything reached the floor.
     for (let i = enemies.length - 1; i >= 0; i--) {
       const enemy = enemies[i];
+
+      // past the floor: costs one life, once, and is gone
+      if (enemy.y - enemy.height / 2 > canvas.height) {
+        enemies.splice(i, 1);
+        // Guarding the decrement behind `health > 0` meant that if the
+        // health ever reached zero by any other route the game simply
+        // never ended: it kept running, kept spawning, and the wave
+        // counter climbed past a hundred. Always settle the state.
+        gameState.health = Math.max(0, gameState.health - 1);
+        if (gameState.health <= 0) gameState.gameOver = true;
+        continue;
+      }
+
+      // met a shield: the shield takes it, and takes it once
       if (enemy.y + enemy.height / 2 > player.y - 20) {
-        player.shields.forEach(shield => {
-          if (Math.abs(enemy.x - (player.x + shield.x)) < 30 && shield.hp > 0) {
-            shield.hp--;
-            enemies.splice(i, 1);
-          }
-        });
+        const hit = player.shields.find(sh =>
+          sh.hp > 0 && Math.abs(enemy.x - (player.x + sh.x)) < 30);
+        if (hit) {
+          hit.hp--;
+          enemies.splice(i, 1);
+          continue;
+        }
       }
     }
 
-    // Remove off-screen
-    enemies = enemies.filter(e => e.y < canvas.height + 50);
-
-    // Check if enemies reached bottom (hurt shield integrity)
-    enemies.forEach(enemy => {
-      if (enemy.y > canvas.height && gameState.health > 0) {
-        gameState.health--;
-        if (gameState.health <= 0) gameState.gameOver = true;
-      }
-    });
-
     // Wave clear
-    if (enemies.length === 0 && gameState.wave > 0) {
+    if (enemies.length === 0 && !gameState.gameOver) {
       gameState.wave++;
       gameState.currentZodiac = (gameState.wave - 1) % 12;
       gameState.score += 100;
@@ -555,9 +596,12 @@ function gameLoop() {
     updateHUD();
     requestAnimationFrame(gameLoop);
   } else if (gameState.gameOver) {
+    loopRunning = false;
     gamePhase = 'gameOver';
     document.getElementById('gameOver').classList.add('active');
     document.getElementById('finalScore').textContent = gameState.score;
+  } else {
+    loopRunning = false;
   }
 }
 

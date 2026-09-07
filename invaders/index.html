@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alchemy Block Invaders</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0a1929;
+      color: #ecfeff;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* `#preGameScreen` is an ID selector and `.screen.active` is two
+       classes, so a `display:flex` declared here BEAT the `.screen`
+       rule that hides an inactive screen. The menu therefore never went
+       away when the class was removed: it simply sat on top of the
+       running game at z-index 50, which is why pressing Begin looked
+       like nothing happened and the game was quietly lost underneath.
+       The layout goes on the .active form so the two agree. */
+    #preGameScreen {
+      background: linear-gradient(135deg, #0a1929 0%, #1a2845 100%);
+      z-index: 50;
+    }
+
+    #preGameScreen.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pre-game-content {
+      text-align: center;
+      max-width: 700px;
+      padding: 40px;
+    }
+
+    .pre-game-content h1 {
+      font-size: 48px;
+      margin: 0 0 10px;
+      color: #5eead4;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #a7c9c2;
+      margin: 0 0 40px;
+    }
+
+    .glyph-selection h2 {
+      font-size: 20px;
+      color: #5eead4;
+      margin: 0 0 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .glyph-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .glyph-button {
+      padding: 20px;
+      background: rgba(94, 234, 212, 0.1);
+      border: 2px solid rgba(94, 234, 212, 0.3);
+      border-radius: 8px;
+      color: #ecfeff;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      font-size: 12px;
+    }
+
+    .glyph-button:hover {
+      background: rgba(94, 234, 212, 0.2);
+      border-color: #5eead4;
+    }
+
+    .glyph-button.selected {
+      background: rgba(94, 234, 212, 0.3);
+      border-color: #5eead4;
+      box-shadow: 0 0 20px rgba(94, 234, 212, 0.5);
+    }
+
+    .glyph-emoji {
+      font-size: 32px;
+    }
+
+    .glyph-name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .glyph-desc {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .start-button {
+      padding: 14px 40px;
+      background: #5eead4;
+      border: none;
+      border-radius: 6px;
+      color: #0a1929;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .start-button:hover:not(:disabled) {
+      background: #4dd0ac;
+      box-shadow: 0 0 20px rgba(94, 234, 212, 0.5);
+    }
+
+    .start-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #0a1929 0%, #1a2845 100%);
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: rgba(20, 30, 50, 0.8);
+    }
+
+    .hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 25, 41, 0.8);
+      border-bottom: 1px solid rgba(94, 234, 212, 0.2);
+      font-size: 12px;
+      z-index: 10;
+      gap: 20px;
+    }
+
+    .hud-left, .hud-right {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .zodiac-indicator {
+      flex: 1;
+      text-align: center;
+      border-left: 1px solid rgba(94, 234, 212, 0.2);
+      border-right: 1px solid rgba(94, 234, 212, 0.2);
+      padding: 0 20px;
+    }
+
+    .zodiac-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #5eead4;
+    }
+
+    .zodiac-phase {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #5eead4;
+    }
+
+    .tome-button, .character-button {
+      padding: 8px 12px;
+      background: rgba(94, 234, 212, 0.15);
+      border: 1px solid rgba(94, 234, 212, 0.5);
+      border-radius: 4px;
+      color: #5eead4;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s;
+      min-width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tome-button:hover, .character-button:hover {
+      background: rgba(94, 234, 212, 0.25);
+      border-color: #5eead4;
+    }
+
+    .elemental-affinity {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .element-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      opacity: 0.6;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .element-indicator.active {
+      opacity: 1;
+      border-color: currentColor;
+    }
+
+    .element-indicator.fire { color: #ff6b6b; background: rgba(255, 107, 107, 0.1); }
+    .element-indicator.water { color: #4dabf7; background: rgba(77, 171, 247, 0.1); }
+    .element-indicator.air { color: #ffd43b; background: rgba(255, 212, 59, 0.1); }
+    .element-indicator.earth { color: #8b6f47; background: rgba(139, 111, 71, 0.1); }
+
+    .tome-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      overflow: auto;
+    }
+
+    .tome-modal.active {
+      display: block;
+    }
+
+    .tome-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 35, 55, 0.95);
+      border: 1px solid rgba(94, 234, 212, 0.4);
+      border-radius: 8px;
+      width: 90vw;
+      max-width: 700px;
+      max-height: 80vh;
+      padding: 32px;
+      overflow-y: auto;
+      box-shadow: 0 0 40px rgba(94, 234, 212, 0.1);
+    }
+
+    .tome-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #5eead4;
+      font-size: 28px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .tome-close:hover {
+      color: #fff;
+    }
+
+    .tome-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 24px;
+      color: #5eead4;
+    }
+
+    .tome-section {
+      margin-bottom: 24px;
+    }
+
+    .tome-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #5eead4;
+      margin: 0 0 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(94, 234, 212, 0.2);
+      padding-bottom: 8px;
+    }
+
+    .tome-entry {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: rgba(10, 25, 41, 0.5);
+      border-left: 3px solid #5eead4;
+      border-radius: 2px;
+    }
+
+    .tome-entry.locked {
+      opacity: 0.5;
+      border-left-color: rgba(94, 234, 212, 0.2);
+    }
+
+    .tome-entry-title {
+      font-weight: 600;
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+
+    .tome-entry-desc {
+      font-size: 13px;
+      color: #a7c9c2;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .game-over {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10, 25, 41, 0.95);
+      border: 2px solid #ff6b6b;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      z-index: 200;
+    }
+
+    .game-over.active {
+      display: block;
+    }
+
+    .game-over h2 {
+      font-size: 32px;
+      margin: 0 0 16px;
+      color: #ff6b6b;
+    }
+
+    .game-over p {
+      margin: 0 0 20px;
+      font-size: 16px;
+      color: #a7c9c2;
+    }
+
+    .game-over button {
+      padding: 10px 20px;
+      background: #ff6b6b;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .game-over button:hover {
+      background: #ff5252;
+    }
+
+    .character-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      overflow: auto;
+    }
+
+    .character-modal.active {
+      display: block;
+    }
+
+    .character-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 35, 55, 0.95);
+      border: 1px solid rgba(94, 234, 212, 0.4);
+      border-radius: 8px;
+      width: 90vw;
+      max-width: 600px;
+      max-height: 80vh;
+      padding: 32px;
+      overflow-y: auto;
+      box-shadow: 0 0 40px rgba(94, 234, 212, 0.1);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #5eead4;
+      font-size: 28px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .character-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 24px;
+      color: #5eead4;
+    }
+
+    .character-stat-group {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(94, 234, 212, 0.2);
+    }
+
+    .character-stat-group:last-child {
+      border-bottom: none;
+    }
+
+    .character-stat-label {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .character-stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #5eead4;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(94, 234, 212, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #5eead4;
+      transition: width 0.3s;
+    }
+
+    .affinity-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .affinity-item {
+      padding: 10px;
+      background: rgba(10, 25, 41, 0.5);
+      border: 1px solid rgba(94, 234, 212, 0.2);
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+      .glyph-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .hud {
+        font-size: 11px;
+        padding: 8px 12px;
+        gap: 12px;
+      }
+
+      .zodiac-indicator {
+        padding: 0 12px;
+      }
+
+      canvas {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="preGameScreen" class="screen active">
+    <div class="pre-game-content">
+      <h1>Alchemy Block Invaders</h1>
+      <p class="subtitle">Choose your alchemical focus to begin your initiation</p>
+
+      <div class="glyph-selection">
+        <h2>Select Shield Glyph</h2>
+        <div class="glyph-grid">
+          <button class="glyph-button" data-glyph="fire">
+            <div class="glyph-emoji">🔥</div>
+            <div class="glyph-name">Fire</div>
+            <div class="glyph-desc">+1.5× Fire reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="water">
+            <div class="glyph-emoji">💧</div>
+            <div class="glyph-name">Water</div>
+            <div class="glyph-desc">+1.5× Water reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="air">
+            <div class="glyph-emoji">🌬️</div>
+            <div class="glyph-name">Air</div>
+            <div class="glyph-desc">+1.5× Air reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="earth">
+            <div class="glyph-emoji">🌍</div>
+            <div class="glyph-name">Earth</div>
+            <div class="glyph-desc">+1.5× Earth reaction XP</div>
+          </button>
+          <button class="glyph-button" data-glyph="sun">
+            <div class="glyph-emoji">☉</div>
+            <div class="glyph-name">Sun</div>
+            <div class="glyph-desc">+2× reaction XP (premium)</div>
+          </button>
+          <button class="glyph-button" data-glyph="moon">
+            <div class="glyph-emoji">☽</div>
+            <div class="glyph-name">Moon</div>
+            <div class="glyph-desc">Mirror & double effects</div>
+          </button>
+          <button class="glyph-button" data-glyph="random">
+            <div class="glyph-emoji">?</div>
+            <div class="glyph-name">Surprise</div>
+            <div class="glyph-desc">Random glyph chosen</div>
+          </button>
+        </div>
+      </div>
+
+      <button class="start-button" id="startButton" disabled>Begin Your Initiation</button>
+    </div>
+  </div>
+
+  <div id="gameContainer" class="screen">
+    <div class="hud">
+      <div class="hud-left">
+        <div class="stat">
+          <div class="stat-label">XP / Level</div>
+          <div class="stat-value" id="xpDisplay">0 / App</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Wave</div>
+          <div class="stat-value" id="waveDisplay">1</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Health</div>
+          <div class="stat-value" id="healthDisplay">3</div>
+        </div>
+      </div>
+
+      <div class="zodiac-indicator">
+        <div class="zodiac-name" id="zodiacName">♈ Aries</div>
+        <div class="zodiac-phase" id="zodiacPhase">Calcination</div>
+      </div>
+
+      <div class="hud-right">
+        <button class="tome-button" id="tomeButton">📖</button>
+        <button class="character-button" id="characterButton">👤</button>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <div class="tome-modal" id="tomeModal">
+    <div class="tome-content">
+      <button class="tome-close" id="tomeClose">&times;</button>
+      <h2 class="tome-title">Spellbook of Alchemy</h2>
+      <div id="tomeEntries"></div>
+    </div>
+  </div>
+
+  <div class="game-over" id="gameOver">
+    <h2>Game Over</h2>
+    <p>Final Score: <span id="finalScore">0</span></p>
+    <button onclick="location.reload()">Play Again</button>
+  </div>
+
+  <div class="character-modal" id="characterModal">
+    <div class="character-content">
+      <button class="modal-close" id="characterClose">&times;</button>
+      <h2 class="character-title">Your Alchemical Journey</h2>
+      <div id="characterStats"></div>
+    </div>
+  </div>
+
+  <!-- versioned so a browser that cached an earlier build does not keep
+       serving it; bump this whenever game-v2.js changes -->
+  <script src="game-v2.js?v=3"></script>
+</body>
+</html>

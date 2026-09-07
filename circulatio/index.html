@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIRCULATIO</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #f4f1e4; color: #2f3437;
+    font-family: "Courier New", ui-monospace, monospace;
+    user-select: none;
+  }
+  #view { display: block; width: 100vw; height: 100vh; }
+
+  .frame {
+    position: fixed; border: 1px solid #2f3437; background: rgba(244,241,228,.92);
+    padding: 10px 12px; font-size: 11px; line-height: 1.5; z-index: 10;
+  }
+  .frame h3 { margin: 0 0 2px; font-size: 12px; letter-spacing: .18em; font-weight: 700; }
+  .frame .sub { font-size: 10px; opacity: .6; letter-spacing: .1em; margin-bottom: 7px; }
+  .frame p { margin: 0 0 6px; font-size: 10.5px; line-height: 1.55; opacity: .85; }
+  .prov {
+    display: inline-block; border: 1px solid currentColor; padding: 0 5px;
+    font-size: 8.5px; letter-spacing: .14em; opacity: .75; margin-bottom: 6px;
+  }
+  .src { font-size: 9px; opacity: .5; line-height: 1.45; border-top: 1px solid rgba(47,52,55,.2); padding-top: 5px; }
+
+  /* top-left status */
+  #status { top: 12px; left: 12px; min-width: 210px; }
+  #status .row { display: flex; justify-content: space-between; gap: 14px; }
+  #status .row b { font-variant-numeric: tabular-nums; }
+  #courseName { font-size: 13px; letter-spacing: .16em; font-weight: 700; }
+  #courseSub { font-size: 9.5px; opacity: .55; margin-bottom: 8px; }
+
+  /* left: the active metaphysics */
+  #rulesFrame { top: 150px; left: 12px; width: 262px; }
+  #rulesFrame .consts { font-size: 9.5px; opacity: .62; margin-top: 6px; letter-spacing: .04em; }
+
+  /* right: held power / letter */
+  #powerFrame { top: 12px; right: 12px; width: 248px; }
+  #letterFrame { top: 12px; right: 12px; width: 248px; display: none; }
+  body.lettering #letterFrame { display: block; }
+  body.lettering #powerFrame { display: none; }
+  .glyphrow { display: flex; gap: 6px; margin: 8px 0; }
+  .glyphrow span {
+    border: 1px solid #2f3437; width: 30px; height: 30px; display: flex;
+    align-items: center; justify-content: center; font-size: 17px; cursor: pointer;
+  }
+  .glyphrow span.on { background: #2f3437; color: #f4f1e4; }
+
+  /* bottom: shot */
+  #shot { bottom: 12px; left: 12px; width: 300px; }
+  #shot .lbl { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .12em; }
+  #meter { height: 12px; border: 1px solid #2f3437; margin: 6px 0 4px; position: relative; }
+  #meterFill { position: absolute; inset: 1px auto 1px 1px; background: #e8402a; width: 0%; }
+  #meterMark { position: absolute; top: -3px; bottom: -3px; width: 1px; background: #2f3437; left: 70%; opacity: .5; }
+  .mode { display: inline-block; border: 1px solid currentColor; padding: 1px 7px; font-size: 10px; letter-spacing: .12em; }
+
+  /* bottom-right: keys */
+  #keys { bottom: 12px; right: 12px; width: 250px; font-size: 9.5px; opacity: .8; }
+  #keys div { display: flex; gap: 8px; }
+  #keys kbd { border: 1px solid #2f3437; padding: 0 4px; font-size: 9px; min-width: 46px; text-align: center; }
+
+  /* overlays */
+  .overlay {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(244,241,228,.95);
+  }
+  .overlay.show { display: flex; }
+  .panel { max-width: 660px; width: 100%; max-height: 88vh; overflow-y: auto; border: 1px solid #2f3437; padding: 26px 28px; }
+  .panel h1 { font-size: 27px; margin: 0 0 2px; letter-spacing: .22em; }
+  .panel .tag { font-size: 11px; letter-spacing: .16em; opacity: .6; margin: 0 0 18px; }
+  .panel p { font-size: 12.5px; line-height: 1.7; margin: 0 0 12px; }
+  .panel h2 { font-size: 11px; letter-spacing: .2em; opacity: .55; margin: 22px 0 8px; font-weight: 400; }
+  .keys2 { display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; font-size: 11.5px; align-items: center; }
+  .keys2 kbd { border: 1px solid #2f3437; padding: 1px 7px; font-size: 10.5px; white-space: nowrap; }
+  .btn { cursor: pointer; border: 1px solid #2f3437; background: transparent; color: inherit;
+         font: inherit; font-size: 12px; letter-spacing: .14em; padding: 9px 20px; margin-top: 20px; }
+  .btn:hover { background: rgba(47,52,55,.1); }
+</style>
+</head>
+<body>
+
+<canvas id="view"></canvas>
+
+<div class="frame" id="status">
+  <div id="courseName">THE VESSEL</div>
+  <div id="courseSub">circulatio</div>
+  <div class="row"><span>STROKE</span><b id="stroke">0</b></div>
+  <div class="row"><span>PAR</span><b id="par">5</b></div>
+  <div class="row"><span>REMAINING</span><b id="remaining">5</b></div>
+  <div class="row"><span>STATE</span><b id="phase">AIM</b></div>
+</div>
+
+<div class="frame" id="rulesFrame">
+  <h3 id="rsName">ARISTOTELIAN</h3>
+  <div class="sub" id="rsSub">Four elements, natural place</div>
+  <div class="prov" id="rsProv">INTERPRETATION</div>
+  <p id="rsNote"></p>
+  <div class="consts" id="rsConsts"></div>
+  <div class="src" id="rsSrc"></div>
+</div>
+
+<div class="frame" id="powerFrame">
+  <h3 id="pwName">NO POWER HELD</h3>
+  <div class="sub" id="pwSub">roll over a sigil to take one up</div>
+  <div class="prov" id="pwProv" style="display:none"></div>
+  <p id="pwGloss"></p>
+  <p id="pwEffect" style="opacity:1"></p>
+</div>
+
+<div class="frame" id="letterFrame">
+  <h3>INSCRIBE</h3>
+  <div class="sub">ʿilm al-ḥurūf — rewrite the law of one tile</div>
+  <div class="glyphrow" id="glyphRow"></div>
+  <div class="prov" id="ltProv"></div>
+  <p id="ltGloss"></p>
+  <p id="ltOp"></p>
+  <div class="src" id="ltSrc"></div>
+</div>
+
+<div class="frame" id="shot">
+  <div class="lbl"><span class="mode" id="shotMode">GROUND</span><span id="shotInfo"></span></div>
+  <div id="meter"><div id="meterFill"></div><div id="meterMark"></div></div>
+  <div class="lbl"><span id="powerLabel">POWER</span><span id="powerVal">0%</span></div>
+</div>
+
+<div class="frame" id="keys">
+  <div><kbd>A / D</kbd><span>aim</span></div>
+  <div><kbd>W / S</kbd><span>loft (air shot)</span></div>
+  <div><kbd>Z / X</kbd><span>english</span></div>
+  <div><kbd>Tab</kbd><span>ground / air</span></div>
+  <div><kbd>Space</kbd><span>meter, then strike</span></div>
+  <div><kbd>Q / E</kbd><span>turn the table</span></div>
+  <div><kbd>1&ndash;4</kbd><span>metaphysics</span></div>
+  <div><kbd>L</kbd><span>inscribe a letter</span></div>
+  <div><kbd>R / N</kbd><span>reset / next course</span></div>
+</div>
+
+<div class="overlay show" id="startScreen">
+  <div class="panel">
+    <h1>CIRCULATIO</h1>
+    <p class="tag">A bounce engine whose physics is a metaphysics</p>
+    <p>You are the matter in the vessel. <b>Circulatio</b> is the operation in which the substance
+       rises and falls, over and over, through the same apparatus, until it is fixed. You strike
+       yourself around a course the way a cue strikes a ball, or you loft yourself over it. Every
+       body you touch is dissolved; when one remains it becomes the mouth of the flask, and you
+       must fall into it.</p>
+    <p>The point of the engine is the frame on the left. A <b>ruleset</b> is not a difficulty
+       setting and not a skin — it is the physics. Gravity, rebound, grip and drag all come from
+       the metaphysics you have selected, so a line that solves a course under Paracelsus may be
+       impossible under Aristotle. Under the <b>lettrist</b> ruleset the global constants go slack
+       and the law is whatever letter is written on the tile you are touching: press <kbd>L</kbd>
+       and inscribe the course.</p>
+    <p>The dotted line is not an approximation. It is the real simulation run forward on a copy of
+       the ball, so what you are shown is what will happen.</p>
+    <h2>Controls</h2>
+    <div class="keys2">
+      <kbd>A / D</kbd><span>rotate the aim</span>
+      <kbd>W / S</kbd><span>raise and lower the loft (air shot only)</span>
+      <kbd>Z / X</kbd><span>put english on the ball</span>
+      <kbd>Tab</kbd><span>switch between the ground shot and the air shot</span>
+      <kbd>Space</kbd><span>start the power meter, then again to strike</span>
+      <kbd>Q / E</kbd><span>turn the table a quarter</span>
+      <kbd>1 2 3 4</kbd><span>Aristotelian / Paracelsian / Pythagorean / Lettrist</span>
+      <kbd>L</kbd><span>inscription mode — click a tile to write a letter on it</span>
+      <kbd>R</kbd><span>replace the ball (costs a stroke)</span>
+      <kbd>N</kbd><span>next course</span>
+    </div>
+    <button class="btn" id="startBtn">Begin the Circulation</button>
+  </div>
+</div>
+
+<div class="overlay" id="doneScreen">
+  <div class="panel" style="max-width:460px;">
+    <h1 id="doneTitle" style="font-size:22px;">FIXED</h1>
+    <p class="tag" id="doneSub">the matter has entered the flask</p>
+    <p id="doneLine"></p>
+    <button class="btn" id="nextBtn">Next Course</button>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

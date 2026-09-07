@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NOVA HEAT — Fruit of Life</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #f4f1e4; color: #2f3437;
+    font-family: "Courier New", ui-monospace, monospace;
+    user-select: none;
+  }
+  #game { display: block; width: 100vw; height: 100vh; touch-action: none; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0; padding: 10px 14px;
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+    font-size: 12px; letter-spacing: .12em; pointer-events: none; z-index: 10;
+    text-transform: uppercase;
+  }
+  .stat { display: flex; flex-direction: column; gap: 3px; min-width: 62px; }
+  .stat b { font-size: 17px; font-weight: 700; letter-spacing: .04em; }
+  .stat span { opacity: .6; font-size: 9px; }
+  .meter { width: 116px; }
+  .bar { height: 7px; border: 1px solid currentColor; position: relative; }
+  .bar i { position: absolute; inset: 1px auto 1px 1px; display: block; }
+  #pranaFill { background: #29a8e0; width: 0%; }
+  #heatFill  { background: #e8402a; width: 0%; }
+  #breathBar { height: 7px; border: 1px solid currentColor; position: relative; }
+  #breathFill { position: absolute; inset: 1px auto 1px 1px; background: #6b4423; width: 0%; }
+  #breathWin { position: absolute; top: -2px; bottom: -2px; right: 0; width: 14%;
+               border: 1px dashed currentColor; opacity: .55; }
+  .lit b { font-variant-numeric: tabular-nums; }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    pointer-events: auto; cursor: pointer; border: 1px solid currentColor;
+    background: transparent; color: inherit; font: inherit; font-size: 11px;
+    letter-spacing: .14em; padding: 7px 12px; text-transform: uppercase;
+  }
+  .btn:hover { background: rgba(47,52,55,.1); }
+  .btn:disabled { opacity: .3; cursor: default; }
+  #topRight { position: fixed; top: 10px; right: 14px; display: flex; gap: 8px; z-index: 11; }
+
+  #touch { position: fixed; bottom: 16px; right: 14px; display: none; gap: 8px; z-index: 11; }
+  body.touch #touch { display: flex; }
+
+  /* ---------- overlays ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(244,241,228,.94); backdrop-filter: blur(2px);
+  }
+  .overlay.show { display: flex; }
+  .panel {
+    max-width: 720px; width: 100%; max-height: 88vh; overflow-y: auto;
+    border: 1px solid #2f3437; padding: 26px 28px; background: #f4f1e4;
+  }
+  .panel h1 { font-size: 30px; margin: 0 0 2px; letter-spacing: .2em; font-weight: 700; }
+  .panel h2 { font-size: 13px; margin: 26px 0 10px; letter-spacing: .2em; opacity: .55; font-weight: 400; }
+  .panel .sub { margin: 0 0 20px; font-size: 12px; letter-spacing: .14em; opacity: .6; }
+  .panel p  { font-size: 13px; line-height: 1.65; margin: 0 0 12px; }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 12px; line-height: 1.5; margin-bottom: 18px; }
+  .keys kbd { border: 1px solid #2f3437; padding: 1px 7px; font-size: 11px; white-space: nowrap; }
+  .entry { border-left: 3px solid #2f3437; padding: 2px 0 2px 14px; margin-bottom: 18px; }
+  .entry h3 { font-size: 13px; margin: 0 0 6px; letter-spacing: .16em; }
+  .entry p { font-size: 12.5px; line-height: 1.6; margin: 0; opacity: .82; }
+  .entry .src { font-size: 10.5px; opacity: .5; margin-top: 6px; letter-spacing: .06em; }
+  .locked { opacity: .3; font-size: 12px; letter-spacing: .1em; margin-bottom: 8px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+  .scores { display: flex; gap: 34px; margin: 18px 0 4px; flex-wrap: wrap; }
+  .scores div b { display: block; font-size: 26px; }
+  .scores div span { font-size: 10px; letter-spacing: .16em; opacity: .55; }
+  .swatch { display: inline-block; width: 9px; height: 9px; margin-right: 6px; vertical-align: baseline; }
+
+  /* keep the HUD from running underneath the top-right buttons */
+  #hud { padding-right: 190px; }
+  @media (max-width: 620px) {
+    #hud { padding-right: 8px; gap: 12px; }
+    #hud .meter { width: 84px; }
+    .stat b { font-size: 15px; }
+    #topRight { top: auto; bottom: 16px; left: 14px; right: auto; }
+    .panel { padding: 20px 18px; }
+    .panel h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="stat"><b id="score">0</b><span>Score</span></div>
+  <div class="stat"><b id="breathNo">1</b><span>Breath</span></div>
+  <div class="stat lit"><b id="litCount">0/13</b><span>Lit</span></div>
+  <div class="stat meter"><div class="bar"><i id="pranaFill"></i></div><span>Prana</span></div>
+  <div class="stat meter"><div class="bar"><i id="heatFill"></i></div><span>Nova Heat</span></div>
+  <div class="stat meter"><div id="breathBar"><div id="breathFill"></div><div id="breathWin"></div></div><span>Breath</span></div>
+</div>
+
+<div id="topRight">
+  <button class="btn" id="codexBtn">Codex <span id="codexCount">0</span></button>
+  <button class="btn" id="pauseBtn">Pause</button>
+</div>
+
+<div id="touch">
+  <button class="btn" id="cutupBtn">Cut-Up</button>
+</div>
+
+<!-- START -->
+<div class="overlay show" id="startScreen">
+  <div class="panel">
+    <h1>NOVA HEAT</h1>
+    <p class="sub">Fruit of Life &middot; Thirteen Circles &middot; Seventy-Eight Lines</p>
+    <p>The page holds <b>Metatron's Cube</b> in pencil. Place spheres of prana into its thirteen
+       circles. Any two charged circles light the line between them, and a lit line burns.</p>
+    <p>The <b>Nova Mob</b> comes in from the margin to drain the figure and reach the centre.
+       Every one that gets there scorches the paper. Hold seven or more circles and the paper cools.
+       Light all thirteen and the <b>Mer-Ka-Ba</b> turns &mdash; it clears the page and dumps the heat, but it is built out of the figure and leaves every circle dark behind it.</p>
+    <h2>Controls</h2>
+    <div class="keys">
+      <kbd>Move mouse</kbd><span>aim at a circle</span>
+      <kbd>Click / Space</kbd><span>place a sphere (16 prana)</span>
+      <kbd>W A S D / Arrows</kbd><span>move the selection</span>
+      <kbd>C</kbd><span>Cut-Up — scramble the Mob, restore severed lines (40 prana)</span>
+      <kbd>P</kbd><span>pause</span>
+    </div>
+    <p style="opacity:.7">Place on the <b>peak of the inhale</b> — the dashed window on the breath
+       meter — for 9 prana and a 135% overcharge. That timing is the whole skill of the game.</p>
+    <div class="row"><button class="btn" id="startBtn" style="font-size:14px;padding:11px 26px;">Begin the First Breath</button></div>
+  </div>
+</div>
+
+<!-- CODEX -->
+<div class="overlay" id="codexScreen">
+  <div class="panel">
+    <h1 style="font-size:22px;">CODEX</h1>
+    <p class="sub">What the figure is, and who is walking into it</p>
+    <div id="codexBody"></div>
+    <div class="row"><button class="btn" id="codexClose">Close</button></div>
+  </div>
+</div>
+
+<!-- PAUSE -->
+<div class="overlay" id="pauseScreen">
+  <div class="panel" style="max-width:420px;">
+    <h1 style="font-size:22px;">PAUSED</h1>
+    <p class="sub">The breath is held</p>
+    <div class="row"><button class="btn" id="resumeBtn">Resume</button></div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="overlay" id="overScreen">
+  <div class="panel" style="max-width:520px;">
+    <h1 style="font-size:24px;">THE PAGE IS ASH</h1>
+    <p class="sub" id="overSub">Nova heat moving in</p>
+    <div class="scores">
+      <div><b id="fScore">0</b><span>Score</span></div>
+      <div><b id="fBreath">0</b><span>Breaths</span></div>
+      <div><b id="fMerkaba">0</b><span>Mer-Ka-Ba</span></div>
+      <div><b id="fCodex">0</b><span>Codex</span></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="againBtn" style="font-size:14px;padding:11px 26px;">Draw a New Page</button>
+      <button class="btn" id="overCodexBtn">Read the Codex</button>
+    </div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
