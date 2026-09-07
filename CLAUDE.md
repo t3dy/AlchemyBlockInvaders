@@ -63,6 +63,7 @@ reference goes stale, and for how to step these loops correctly.
 
 | file | why |
 |---|---|
+| **`HANDOVER.md`** | where the project stands, what to build next, and every trap that has already cost time. **Start here in a new session.** |
 | **`PROMPTSTOFEATURES.md`** | every requirement Ted has given, unpacked into features with status, plus the standing instructions and the engineering rules learned from real bugs. **This is the spec.** |
 | `CLAUDECONVO1.md` | the verbatim session record those requirements come from |
 | `VERIFIED.md` | what has actually been driven and what it showed — including how to drive these loops without the harness lying to you |

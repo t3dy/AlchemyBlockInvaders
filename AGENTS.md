@@ -10,7 +10,7 @@ agents move between the game projects in `C:\Dev` and the corpus is shared:
 
 ## Specific to this repository
 
-**Read `PROMPTSTOFEATURES.md` first.** It is the spec: every requirement Ted has given,
+**Read `HANDOVER.md` first, then `PROMPTSTOFEATURES.md`.** It is the spec: every requirement Ted has given,
 unpacked into features with status, the standing instructions, and the engineering rules.
 The backlog at the end of it is ordered — start at the top.
 
