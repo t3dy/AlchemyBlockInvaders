@@ -59,6 +59,35 @@ starting the others.
 verification. Read them through getters or live objects - see VERIFIED.md for why a captured
 reference goes stale, and for how to step these loops correctly.
 
+## READ THESE FIRST
+
+| file | why |
+|---|---|
+| **`PROMPTSTOFEATURES.md`** | every requirement Ted has given, unpacked into features with status, plus the standing instructions and the engineering rules learned from real bugs. **This is the spec.** |
+| `CLAUDECONVO1.md` | the verbatim session record those requirements come from |
+| `VERIFIED.md` | what has actually been driven and what it showed — including how to drive these loops without the harness lying to you |
+| `DEPLOY_STATE.md` | the live URL, the host, and the two ways this site breaks |
+| `C:\Dev\PIPELINE.md` | where the research corpus is and how a source becomes a mechanic |
+| `C:\Dev\AGENTS.md` | agent roles and handover contracts |
+
+## The invaders game is now v3
+
+`invaders/` is no longer a four-element shooter. It is built from four files:
+
+| file | what |
+|---|---|
+| `glyphs.js` | **the 26 glyph blocks and their behaviours.** Elements, principles, planets, zodiacal operations. Each `onHit` returns a list of *effects* and mutates nothing — that purity is what lets a chain of forty resolve without the code turning to soup. |
+| `cascade.js` | the effect resolver. A work queue, not recursion; one trigger per block per chain; a 400-effect cap. This is the Rube Goldberg machine. |
+| `spells.js` | the three operations (SOLVE / COAGULA / PROJECTIO) on `Z` `X` `C`, and the Gradius power bar spent with `Shift`. |
+| `game-v3.js` | the engine: THE CABINET (exhibition of all 26) and WAVES. |
+
+**`game-v2.js` is superseded and nothing loads it.** The old line numbers quoted further down
+this document refer to the original `game.js`, which is older still. Treat both as history.
+
+**The rule for new blocks:** the behaviour must follow from the symbolism. Jupiter expands
+because Jupiter is the principle of increase. If you cannot state that sentence for a block
+you are adding, the block is not ready.
+
 ## Game Architecture
 
 ### Core Systems

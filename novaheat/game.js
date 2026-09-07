@@ -859,6 +859,7 @@ function frame(now) {
   last = now;
   if (canvas.clientWidth !== lastW || canvas.clientHeight !== lastH) layout();
   if (state.running && !state.paused && !state.over) update(dt);
+  HELP.tick(dt);
   draw();
   updateHUD();
   requestAnimationFrame(frame);
@@ -1044,4 +1045,51 @@ if ('ontouchstart' in window) document.body.classList.add('touch');
 window.addEventListener('resize', layout);
 
 layout();
+
+// ---------- the teaching layer ----------
+HELP.install({
+  id: 'novaheat', light: true,
+  title: 'NOVA HEAT',
+  subtitle: 'Fruit of Life · thirteen circles · seventy-eight lines',
+  premise: 'Metatron\u2019s Cube, drawn in pencil, holding thirteen circles. The figure is not a ' +
+    'picture here, it is a GRAPH: what matters is which circles are joined to which. Place prana ' +
+    'into a circle to charge it, and any two charged circles light the line between them. A lit ' +
+    'line burns whatever crosses it.',
+  goal: 'The Nova Mob comes in from the margin to drain your circles and reach the centre, and ' +
+    'every one that arrives scorches the paper. When the paper is fully scorched the run is over. ' +
+    'Hold seven or more circles lit and the paper COOLS instead. Light all thirteen and the ' +
+    'Mer-Ka-Ba turns \u2014 it clears the page and dumps the heat, but it is built out of the ' +
+    'figure and leaves every circle dark behind it, so you begin again from nothing.',
+  controls: [
+    ['mouse', 'aim at a circle'],
+    ['click', 'place a sphere'],
+    ['Space', 'place a sphere'],
+    ['WASD', 'move the selection'],
+    ['C', 'CUT-UP (40 prana)'],
+    ['P', 'pause']
+  ],
+  stripNote: '<b>The skill:</b> place on the PEAK OF THE INHALE \u2014 the dashed window on the ' +
+             'breath meter. It costs 9 prana instead of 16 and lands at 135%.',
+  opening: 'Press <b>H</b> for the full manual. The dashed window on the breath meter is the whole game.',
+  systems: [
+    { title: 'THE BREATH \u2014 THIS IS THE WHOLE GAME',
+      body: '<p>The meter at the top is a breath, rising and falling. Placing a sphere at any time ' +
+            'works, but placing it <b>on the peak of the inhale</b> \u2014 inside the dashed window ' +
+            '\u2014 costs <b>9 prana instead of 16</b> and charges the circle to <b>135%</b>.</p>' +
+            '<div class="note">Nearly every run that goes badly is a run spent placing off the beat. ' +
+            'Wait for the window. You will place fewer spheres and hold far more circles.</div>' },
+    { title: 'HEAT, AND HOW TO GET RID OF IT',
+      body: '<p>Every member of the Mob that reaches the centre scorches the paper. Heat only ever ' +
+            'goes down two ways:</p><div class="note"><b>Hold seven circles or more</b> and the paper ' +
+            'cools continuously.<br><b>Light all thirteen</b> and the Mer-Ka-Ba turns, which dumps the ' +
+            'heat entirely \u2014 at the price of every circle going dark.</div>' +
+            '<p>An unlit figure also heats up on its own, so a board with nothing on it is losing.</p>' },
+    { title: 'THE CUT-UP',
+      body: '<p><b>C</b>, and it costs 40 prana. The Mob works by keeping the tape running in order; ' +
+            'the counter-move Burroughs worked out across <i>Nova Express</i> and <i>The Ticket That ' +
+            'Exploded</i> is to take scissors to the tape. Here it scrambles the Mob out of position ' +
+            'and re-splices every line they have cut. Save it for when the figure is coming apart.</p>' }
+  ]
+});
+
 requestAnimationFrame(function (t) { last = t; requestAnimationFrame(frame); });

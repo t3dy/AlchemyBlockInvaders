@@ -592,6 +592,7 @@ function frame(now) {
   $('powerVal').textContent = Math.round(G.meter * 100) + '%';
   $('phase').textContent = G.phase.toUpperCase();
 
+  window.HELP.tick(dt);
   view.renderer.render(view.scene, view.camera);
   requestAnimationFrame(frame);
 }
@@ -615,5 +616,63 @@ $('nextBtn').addEventListener('click', function () { nextCourse(); this.blur(); 
 
 // exposed for headless verification and tuning
 window.CIRC = { G, P, V, RULESETS, POWERS, LETTERS, tickLive, loadCourse, shotVelocity, fire, settle };
+
+
+// ---------- the teaching layer ----------
+window.HELP.install({
+  id: 'circulatio', light: true,
+  title: 'CIRCULATIO',
+  subtitle: 'the matter rises and falls until it is fixed',
+  premise: 'A bounce-and-strike course in the manner of Kirby\u2019s Dream Course \u2014 except ' +
+    'that the physics is a PHILOSOPHY, and you may change it mid-round. Aristotelian bodies seek ' +
+    'their natural place: heavy gravity, dead rebounds, ground that grips. The Paracelsian, ' +
+    'Pythagorean and Lettrist readings each answer differently, and the same shot behaves like a ' +
+    'different shot under each.',
+  goal: 'You are the matter in the vessel. Every body you touch is dissolved. When ONE body is ' +
+    'left it becomes the mouth of the flask \u2014 the cup \u2014 and you must fall into it. ' +
+    'Do it in as few strokes as you can: each course has a par.',
+  controls: [
+    ['A  D', 'aim'],
+    ['Space', 'meter, then strike'],
+    ['W  S', 'loft (air shot)'],
+    ['Z  X', 'english'],
+    ['Tab', 'ground / air'],
+    ['Q  E', 'turn the table'],
+    ['1 \u2013 4', 'change metaphysics'],
+    ['L', 'inscribe a letter'],
+    ['R  N', 'reset / next course']
+  ],
+  stripNote: '<b>Space is pressed twice:</b> once to start the power meter sweeping, once to strike ' +
+             'at whatever it is showing. It is not hold-and-release.',
+  opening: 'Press <b>H</b> for the full manual. <b>Space</b> twice \u2014 once to start the meter, ' +
+           'once to strike.',
+  systems: [
+    { title: 'HOW TO TAKE A SHOT',
+      body: '<div class="note"><b>1.</b> <b>A</b> and <b>D</b> to aim. The arrow on the ball shows ' +
+            'where it will go and the dotted line previews the path.<br>' +
+            '<b>2.</b> <b>Tab</b> chooses a ground shot or an air shot; <b>W</b> and <b>S</b> set how ' +
+            'much loft an air shot carries.<br>' +
+            '<b>3.</b> <b>Space</b> starts the power meter sweeping up and down.<br>' +
+            '<b>4.</b> <b>Space</b> again strikes at whatever power the meter is showing.</div>' +
+            '<p>If you are not sure where you are pointing, turn the table with <b>Q</b> and <b>E</b> ' +
+            'and look again \u2014 it costs nothing.</p>' },
+    { title: 'THE PHYSICS IS THE ARGUMENT',
+      body: '<p>Keys <b>1</b> to <b>4</b> change the ruleset in the middle of a round, and each one ' +
+            'names its source on screen. This is the point of the game rather than a difficulty ' +
+            'setting: a physics is a commitment about what the world is like, not a neutral ' +
+            'description of it.</p>',
+      table: { head: ['key', 'reading', 'how it plays'],
+        rows: [
+          ['1', 'ARISTOTELIAN', 'heavy gravity, dead bounces, ground that grips. The ball wants to stop.'],
+          ['2', 'PARACELSIAN', 'the three principles: livelier, more volatile, harder to settle.'],
+          ['3', 'PYTHAGOREAN', 'number and ratio \u2014 motion quantised into clean intervals.'],
+          ['4', 'LETTRIST', 'the letters act on the ball. Inscribe one with <b>L</b>.']
+        ] } },
+    { title: 'THE CUP',
+      body: '<p>Bodies do not have to be destroyed in any order, but the LAST one always becomes the ' +
+            'cup, so what is left standing at the end decides where you have to finish. Think about ' +
+            'which body you want to be the hole before you clear the others.</p>' }
+  ]
+});
 
 requestAnimationFrame(function (t) { last = t; requestAnimationFrame(frame); });

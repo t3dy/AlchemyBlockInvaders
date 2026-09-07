@@ -1093,6 +1093,7 @@ function frame(now) {
     if (rxTimer > 0) { rxTimer -= dt; if (rxTimer <= 0) $('reaction').classList.remove('show'); }
     syncUI();
   }
+  HELP.tick(dt);
   draw();
   requestAnimationFrame(frame);
 }
@@ -1121,5 +1122,67 @@ window.SAL = {
   MASONRY, MATTER, BAR,
   react, update, frame, resetGame, resetLevel, spendBar, hitBlock, blockAt, key
 };
+
+
+// ---------- the teaching layer ----------
+HELP.install({
+  id: 'salamandra',
+  title: 'SALAMANDRA',
+  subtitle: 'a flight through the burning body',
+  premise: 'You fly an alembic through the inside of the athanor, and the furnace is BUILT \u2014 ' +
+    'every structure in here is masonry of a particular alchemical kind, and each answers to one ' +
+    'thing only. Your gun is not one gun: it is eleven kinds of matter. The wrong one is absorbed, ' +
+    'or hardens the wall, or makes it GROW, or jets flame down the lane, or is thrown straight back ' +
+    'at you.',
+  goal: 'At the far end stands the solar lock, which is gold, and gold answers to nothing but ' +
+    'itself. Open a lane through it with SOL and fly out the other side. You do not have to ' +
+    'demolish all of it \u2014 one lane is enough, and one lane is four blocks at three hits each.',
+  controls: [
+    ['WASD', 'fly (arrows too)'],
+    ['Space', 'fire, hold it down'],
+    ['C  V', 'next / previous matter'],
+    ['1 2 3', 'jump register'],
+    ['Shift', 'TAKE POWER-UP'],
+    ['P', 'pause']
+  ],
+  stripNote: '<b>Power-ups:</b> the bar along the bottom is Gradius. Kills fill it; the lit slot is ' +
+             'what you would get; <b>Shift</b> is what actually takes it. Nothing happens until you ' +
+             'press Shift.',
+  opening: 'Press <b>H</b> for the full manual. <b>Shift</b> spends the power bar \u2014 that is the ' +
+           'one control everybody misses.',
+  systems: [
+    { title: 'HOW TO FIRE OFF A POWER-UP',
+      body: '<p>This is the Gradius system, and it is the single most missed control in the game, ' +
+            'so plainly:</p><div class="note"><b>1.</b> Destroy things. The bar along the bottom of ' +
+            'the screen lights one slot further along each time.<br><b>2.</b> The <b>lit slot</b> is ' +
+            'what you would get if you spent it now.<br><b>3.</b> Press <b>Shift</b> to actually take ' +
+            'it. <b>Nothing happens until you press Shift.</b><br><b>4.</b> Or keep killing and let ' +
+            'the cursor travel further along the bar for something better.</div>' +
+            '<p>SPEED, MISSILE, SPREAD, LANCE, ALEMBIC (trailing drones) and SEAL (a shield). ' +
+            'Alchemy Block Invaders uses the same gesture on purpose.</p>' },
+    { title: 'THE MASONRY ANSWERS TO ONE THING',
+      body: '<p>Ten kinds of wall, eleven kinds of matter, and the reaction is fixed. Learn these ' +
+            'six and you can read the whole furnace:</p>',
+      table: { head: ['wall', 'opens to', 'and if you use the wrong thing'],
+        rows: [
+          ['CALX', '\ud83d\udca7 water', 'fire HARDENS it \u2014 it gets tougher'],
+          ['VITRIOL GATE', '\ud83d\udd25 fire', 'water is thrown back at you'],
+          ['SULPHUR VENT', '\ud83d\udd25 fire', 'air makes it JET FLAME down the whole lane'],
+          ['SALT PILLAR', '\ud83d\udca7 water', 'salt makes it GROW'],
+          ['LUNAR MIRROR', '\u2609 sol', 'everything else REFLECTS \u2014 luna passes through'],
+          ['SOLAR LOCK', '\u2609 sol', 'nothing else touches it. This is the way out.']
+        ] } },
+    { title: 'THE THREE REGISTERS',
+      body: '<p><b>1</b> Elemental (fire, water, air, earth) \u00b7 <b>2</b> Principle (sulphur, ' +
+            'salt, mercury) \u00b7 <b>3</b> Astrological (sol, luna, mars, saturn). <b>C</b> and ' +
+            '<b>V</b> step through all eleven one at a time. The panel on the left always names what ' +
+            'you have loaded and what it does.</p>' },
+    { title: 'THE END OF THE LEVEL',
+      body: '<p>When you reach the far end the scroll stops and you get <b>twenty seconds</b> of last ' +
+            'stand, counted down in the top bar. Any lock still on that final screen can be opened in ' +
+            'that time. Fly through the gap and the work is finished; let the clock run out and the ' +
+            'vessel closes with the gold still shut.</p>' }
+  ]
+});
 
 requestAnimationFrame(function (t) { last = t; requestAnimationFrame(frame); });
