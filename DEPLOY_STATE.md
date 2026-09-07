@@ -4,18 +4,11 @@ Read this before touching anything to do with deployment.
 
 ## Canonical
 
-> **STATUS 2026-09-07: NOT YET LIVE.** The site is built, committed on `main` and
-> verified locally, but the GitHub repository has not been created and nothing has been
-> pushed — creating a public repository needs an approval this session did not have. The
-> URL below is the intended one, not a confirmed one. See *Publishing it the first time*
-> at the foot of this document, and delete this notice once the live URL has been loaded
-> in a browser and works.
-
 | | |
 |---|---|
-| **Intended URL** | https://t3dy.github.io/AlchemyBlockInvaders/ *(not yet confirmed)* |
-| **Host** | GitHub Pages, to be served from `main` at the repository root (`/`) |
-| **Repository** | github.com/t3dy/AlchemyBlockInvaders *(not yet created)* |
+| **Live URL** | https://t3dy.github.io/AlchemyBlockInvaders/ |
+| **Host** | GitHub Pages, served from `main` at the repository root (`/`) |
+| **Repository** | https://github.com/t3dy/AlchemyBlockInvaders (public) |
 | **Build step** | none — the repository *is* the site |
 | **Env vars** | none |
 
@@ -76,27 +69,33 @@ One thing that verification cannot cover: the preview pane used for testing susp
 function by hand. Smooth animation is confirmed only by opening the live site in a real
 browser.
 
-## Publishing it the first time
+## Published
 
-The repository does not exist yet. These three steps create it, push, and turn Pages on:
+First published 2026-09-07. `gh repo create --public --push`, then Pages enabled on `main`
+at `/`. First build succeeded with no error.
 
-```bash
-gh repo create AlchemyBlockInvaders --public --source=. --remote=origin --push
+**Verified against the live URL, not the local server:**
+
+| | |
+|---|---|
+| every path | `/`, `/invaders/`, `/novaheat/`, `/circulatio/`, `/salamandra/` and each game's script return 200 |
+| deployed bytes | identical to local for every file once line endings are normalised — git converted CRLF to LF on commit, which is harmless |
+| relative links | the hub's four links resolve to `t3dy.github.io/AlchemyBlockInvaders/<game>/`, i.e. the subpath discipline holds |
+| Alchemy Block Invaders | all seven shields play: waves 3-6, scores 320-860, real game over each time |
+| Nova Heat | untouched run scorches out at 32 s; played run 255 s, score 6120, 10 codex entries |
+| Salamandra | lane opened at 92 s, flew through, **THE LOCK IS OPEN**, score 1035 |
+| Circulatio | three.js loads from the CDN, the cup opens, the ball sinks, the round is scored |
+
+### A trap when testing the live site
+
+The browser pane reports **`innerWidth: 0`** when it is hidden. Alchemy Block Invaders sizes
+its canvas from the viewport, so at zero the floor is at y=0, every block is instantly past
+it, and the game ends in 0.4 seconds looking utterly broken. It is not: give the tab a real
+viewport first and it plays normally.
+
+```
+resize_window { width: 1100, height: 800 }
 ```
 
-```bash
-gh api -X POST repos/t3dy/AlchemyBlockInvaders/pages -f "source[branch]=main" -f "source[path]=/"
-```
-
-Then wait for the first build and load the URL:
-
-```bash
-gh run list --repo t3dy/AlchemyBlockInvaders --limit 1
-```
-
-**Public is deliberate** — GitHub Pages will not serve a private repository on a free
-account, and every other game in this workspace is published the same way. If the repo is
-made private instead, Pages stops and the URL above dies.
-
-Once the live URL loads and one game plays in a real browser, delete the STATUS notice at
-the top of this file and change *Intended URL* back to *Live URL*.
+This is the fifth time a zero viewport has been mistaken for a game bug in this workspace.
+Set the size before drawing any conclusion about a game that dies immediately.
