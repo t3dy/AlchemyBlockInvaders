@@ -4,11 +4,18 @@ Read this before touching anything to do with deployment.
 
 ## Canonical
 
+> **STATUS 2026-09-07: NOT YET LIVE.** The site is built, committed on `main` and
+> verified locally, but the GitHub repository has not been created and nothing has been
+> pushed — creating a public repository needs an approval this session did not have. The
+> URL below is the intended one, not a confirmed one. See *Publishing it the first time*
+> at the foot of this document, and delete this notice once the live URL has been loaded
+> in a browser and works.
+
 | | |
 |---|---|
-| **Live URL** | https://t3dy.github.io/AlchemyBlockInvaders/ |
-| **Host** | GitHub Pages, served from `main` at the repository root (`/`) |
-| **Repository** | https://github.com/t3dy/AlchemyBlockInvaders |
+| **Intended URL** | https://t3dy.github.io/AlchemyBlockInvaders/ *(not yet confirmed)* |
+| **Host** | GitHub Pages, to be served from `main` at the repository root (`/`) |
+| **Repository** | github.com/t3dy/AlchemyBlockInvaders *(not yet created)* |
 | **Build step** | none — the repository *is* the site |
 | **Env vars** | none |
 
@@ -68,3 +75,28 @@ One thing that verification cannot cover: the preview pane used for testing susp
 `requestAnimationFrame`, so every result was produced by stepping each game's frame
 function by hand. Smooth animation is confirmed only by opening the live site in a real
 browser.
+
+## Publishing it the first time
+
+The repository does not exist yet. These three steps create it, push, and turn Pages on:
+
+```bash
+gh repo create AlchemyBlockInvaders --public --source=. --remote=origin --push
+```
+
+```bash
+gh api -X POST repos/t3dy/AlchemyBlockInvaders/pages -f "source[branch]=main" -f "source[path]=/"
+```
+
+Then wait for the first build and load the URL:
+
+```bash
+gh run list --repo t3dy/AlchemyBlockInvaders --limit 1
+```
+
+**Public is deliberate** — GitHub Pages will not serve a private repository on a free
+account, and every other game in this workspace is published the same way. If the repo is
+made private instead, Pages stops and the URL above dies.
+
+Once the live URL loads and one game plays in a real browser, delete the STATUS notice at
+the top of this file and change *Intended URL* back to *Live URL*.
