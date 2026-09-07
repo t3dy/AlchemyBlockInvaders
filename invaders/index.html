@@ -108,6 +108,45 @@
   .gcard .g { font-size: 21px; }
   .gcard .n { font-size: 11px; letter-spacing: .1em; }
   .gcard .p { font-size: 10px; opacity: .72; margin-top: 4px; line-height: 1.45; }
+
+  /* ---------- a spirit of the Goetia ---------- */
+  #spiritHead .sname { font-size: 27px; letter-spacing: .15em; }
+  #spiritHead .srank { font-size: 11px; letter-spacing: .2em; opacity: .68; margin: 4px 0 12px; }
+  #spiritHead .sfacts { display: grid; grid-template-columns: repeat(auto-fit,minmax(128px,1fr));
+    gap: 8px; margin-bottom: 6px; }
+  #spiritHead .sfact { border: 1px solid #4a3f30; padding: 6px 9px; font-size: 10.5px; }
+  #spiritHead .sfact b { display: block; font-size: 9px; letter-spacing: .16em; opacity: .55;
+    font-weight: normal; margin-bottom: 2px; }
+  #spiritText {
+    margin: 0 0 12px; padding: 14px 18px; border-left: 2px solid #8d7a55;
+    background: rgba(255,255,255,.035); font-size: 13.5px; line-height: 1.75; max-width: 78ch;
+  }
+  .prov { font-size: 10px; opacity: .55; max-width: 78ch; line-height: 1.55; }
+  .rosterrow {
+    display: grid; grid-template-columns: 34px 1fr 84px 92px 1fr; gap: 10px;
+    padding: 5px 8px; font-size: 11px; border-bottom: 1px solid #2a241c; cursor: pointer;
+    align-items: baseline;
+  }
+  .rosterrow:hover { background: rgba(245,197,24,.1); }
+  .rosterrow .rn { opacity: .45; }
+  .rosterrow .rname { letter-spacing: .1em; }
+  .rosterrow .rrank { opacity: .6; font-size: 10px; letter-spacing: .12em; }
+  .rosterrow .rweak { color: #f5c518; font-size: 10px; }
+  .rosterrow .roff { opacity: .62; font-size: 10px; }
+  /* ---------- the boss bar ---------- */
+  #spiritBar {
+    position: fixed; top: 108px; left: 50%; transform: translateX(-50%);
+    width: min(620px, 90vw); z-index: 11; display: none;
+  }
+  #spiritBar.show { display: block; }
+  #spiritBar .sb {
+    border: 1px solid #8d7a55; background: rgba(16,13,10,.92); padding: 6px 11px; font-size: 11px;
+  }
+  #spiritBar .sbname { letter-spacing: .14em; font-size: 13px; }
+  #spiritBar .sbwhy { font-size: 10px; opacity: .78; margin-top: 2px; }
+  #spiritBar .sbhp { height: 7px; border: 1px solid #6b5b45; margin-top: 5px; position: relative; }
+  #spiritBar .sbhp i { position: absolute; inset: 1px auto 1px 1px; background: #d64933; display: block; }
+  #spiritBar .guard { color: #f5c518; }
   .kv { display: grid; grid-template-columns: 128px 1fr; gap: 5px 14px; font-size: 12px; }
   .kv kbd { border: 1px solid #8d7a55; padding: 1px 6px; font: inherit; font-size: 11px; text-align: center; }
 </style>
@@ -133,6 +172,12 @@
 </div>
 
 <div id="chain">CHAIN <b id="chainN">0</b></div>
+
+<div id="spiritBar"><div class="sb">
+  <div class="sbname" id="sbName"></div>
+  <div class="sbwhy" id="sbWhy"></div>
+  <div class="sbhp"><i id="sbHp"></i></div>
+</div></div>
 
 <div id="cast">
   <div id="azoth"><i></i><span id="azothN">100</span></div>
@@ -209,6 +254,29 @@
   </div>
 </div>
 
+
+<!-- ============ a spirit of the Goetia: the verbatim reading ============ -->
+<div class="overlay" id="spiritScreen">
+  <div class="sheet">
+    <div id="spiritHead"></div>
+    <h3>THE DESCRIPTION, VERBATIM</h3>
+    <blockquote id="spiritText"></blockquote>
+    <p class="prov" id="spiritProv"></p>
+    <button class="btn" id="spiritClose">CONTINUE THE WORK</button>
+    <button class="btn quiet" id="spiritRoster">THE WHOLE HIERARCHY &nbsp;·&nbsp; all seventy-two</button>
+  </div>
+</div>
+
+<!-- ============ the roster of all 72 ============ -->
+<div class="overlay" id="rosterScreen">
+  <div class="sheet">
+    <h1>THE SEVENTY-TWO</h1>
+    <p class="sub">rank, retinue, office and weakness &mdash; click any one to read its description</p>
+    <div id="rosterBody"></div>
+    <button class="btn" id="rosterClose">BACK</button>
+  </div>
+</div>
+
 <!-- ============ game over ============ -->
 <div class="overlay" id="overScreen">
   <div class="sheet">
@@ -225,6 +293,7 @@
 <script src="glyphs.js?v=2"></script>
 <script src="cascade.js?v=2"></script>
 <script src="spells.js?v=2"></script>
-<script src="game-v3.js?v=2"></script>
+<script src="goetia.js?v=2"></script>
+<script src="game-v3.js?v=4"></script>
 </body>
 </html>

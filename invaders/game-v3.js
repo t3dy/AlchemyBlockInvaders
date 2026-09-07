@@ -35,6 +35,14 @@ const state = {
 };
 
 let blocks = [], shots = [], hostiles = [], capsules = [], sparks = [];
+
+// ---- the Goetia ----
+let GOETIA = [];              // the 72, built from goetia-text.json
+let GOETIA_DOC = null;        // the source document, for provenance
+let spirit = null;            // the mini-boss currently on the board
+let spiritBeaten = [];        // ids already defeated this run
+let windX = 0;                // tempest
+
 let ars = makeArsenal();
 let ship = { x: 0, y: 0, r: 15, speed: 380, cool: 0, invuln: 0 };
 const keys = {};
@@ -251,7 +259,7 @@ function update(dt) {
   if (ars.castFlash > 0) ars.castFlash -= dt;
 
   // ---- ship ----
-  const sp = ship.speed * (1 + 0.28 * (ars.owned.speed || 0));
+  const sp = ship.speed * (1 + 0.28 * (ars.owned.speed || 0)) * (ship.bound ? 0.5 : 1);
   if (keys['arrowleft'] || keys['a']) ship.x -= sp * dt;
   if (keys['arrowright'] || keys['d']) ship.x += sp * dt;
   ship.x = Math.max(20, Math.min(viewW() - 20, ship.x));
@@ -264,6 +272,13 @@ function update(dt) {
     const s = shots[i];
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     if (s.life <= 0 || s.y < -20 || s.x < -20 || s.x > viewW() + 20) { shots.splice(i, 1); continue; }
+    // the spirit is checked first: it stands in front of its retinue
+    if (spirit && !spirit.invisible &&
+        Math.hypot(s.x - spirit.x, s.y - spirit.y) < 30) {
+      hitSpirit(s);
+      shots.splice(i, 1);
+      continue;
+    }
     const hit = blockAtPoint(s.x, s.y);
     if (hit) {
       strike(hit, s);
@@ -328,11 +343,16 @@ function update(dt) {
     }
     blocks = blocks.filter(b => b.alive || b.flash > 0);
 
-    if (!blocks.some(b => b.alive) && !state.over) {
+    if (!blocks.some(b => b.alive) && !spirit && !state.over) {
       state.wave++;
       state.score += 150;
-      HELP.say('<b>WAVE ' + state.wave + '.</b> ' + waveBlurb(state.wave), 4.5);
-      buildWave(state.wave);
+      // every third wave is a gate: a spirit of the Goetia and its retinue
+      if (state.wave % 3 === 0 && GOETIA.length) {
+        startGate(state.wave);
+      } else {
+        HELP.say('<b>WAVE ' + state.wave + '.</b> ' + waveBlurb(state.wave), 4.5);
+        buildWave(state.wave);
+      }
     }
   } else {
     cabinetTick(dt);
@@ -344,6 +364,38 @@ function update(dt) {
       if (d2 < bd) { bd = d2; best = b; }
     }
     focusBlock = (bd < CELL * 3.2) ? best : null;
+  }
+
+  // ---- the spirit ----
+  if (spirit) {
+    spirit.t += dt;
+    if (spirit.flash > 0) spirit.flash -= dt;
+    bearSpirit(spirit, ship, dt, { w: viewW(), h: viewH() });
+    spiritPower(dt);
+    const guard = blocks.filter(b => b.alive && b.retinue).length;
+    const wasOpen = spirit.vulnerable;
+    spirit.vulnerable = guard === 0;
+    if (spirit.vulnerable && !wasOpen) {
+      HELP.say('<b>the retinue is broken.</b> ' + spirit.name.toUpperCase() +
+               ' can be struck now — with ' +
+               spirit.opensTo.map(k => GLYPHS[k].glyph + ' ' + GLYPHS[k].name.split(' ')[0]).join(' or ') + '.', 5);
+      state.shake = 8;
+    }
+    // it reaches you
+    if (ship.invuln <= 0 && Math.hypot(spirit.x - ship.x, spirit.y - ship.y) < 30) {
+      if (spirit.power.id === 'steal') {
+        const owned = Object.keys(ars.owned).filter(k => ars.owned[k] > 0);
+        if (owned.length) {
+          const k = owned[Math.floor(Math.random() * owned.length)];
+          ars.owned[k]--; spirit.stolen.push(k);
+          HELP.say('it has taken your <b>' + k.toUpperCase() + '</b> — kill it to get it back', 3.4);
+        }
+      }
+      hurt(spirit.name + ' struck the vessel');
+      spirit.y = 120; spirit.t = 0;
+    }
+    if (spirit.y > viewH() - 90) { spirit.y = 110; }
+    syncSpiritBar();
   }
 
   // ---- capsules ----
@@ -368,6 +420,207 @@ function update(dt) {
 
   if (chainHold > 0) { chainHold -= dt; if (chainHold <= 0) $('chain').classList.remove('show'); }
   if (readoutHold > 0) { readoutHold -= dt; if (readoutHold <= 0) $('readout').classList.remove('show'); }
+}
+
+// ===================================================================
+// A GATE — a spirit of the Goetia, and the retinue you must cut through
+// first. The spirit cannot be touched while any of its legion stands,
+// which is what makes it a mini-boss rather than a big enemy.
+// ===================================================================
+function startGate(wave) {
+  const pool = GOETIA.filter(g => spiritBeaten.indexOf(g.id) < 0);
+  const src = pool.length ? pool : GOETIA;
+  const g = src[Math.floor(Math.random() * src.length)];
+
+  spirit = Object.assign({}, g, {
+    x: viewW() / 2, y: 120, homeX: viewW() / 2, homeY: 150,
+    hp: g.hp, maxHp: g.hp, t: 0, cool: 0, phase: 0,
+    invisible: false, vulnerable: false, stolen: [], flash: 0
+  });
+  windX = 0;
+
+  // the retinue: blocks that must be cleared before the spirit is open
+  blocks = []; shots = []; hostiles = []; capsules = [];
+  const pool2 = poolForWave(wave);
+  const n = spirit.retinue;
+  for (let i = 0; i < n; i++) {
+    const c = 1 + Math.floor((i / n) * (COLS - 2));
+    const r = i % 3;
+    const b = makeBlock(pool2[Math.floor(Math.random() * pool2.length)], c, r,
+                        { y: 210 + r * (CELL + 6) });
+    if (b) b.retinue = true;
+  }
+  $('spiritBar').classList.add('show');
+  syncSpiritBar();
+
+  HELP.say('<b>' + spirit.name.toUpperCase() + '</b>, ' + spirit.rank.toUpperCase() +
+           ' of the Goetia, commanding <b>' + spirit.legions + ' legions</b>. ' +
+           'Cut through the retinue before it can be touched.', 7);
+  HELP.say('<b>' + spirit.power.name + '</b> — ' + spirit.power.teach, 7);
+  HELP.say('It opens only to <b>' + spirit.opensTo.map(k => GLYPHS[k].glyph + ' ' +
+           GLYPHS[k].name.split(' ')[0]).join('</b> or <b>') + '</b> — its own planet and element.', 6);
+}
+
+function syncSpiritBar() {
+  if (!spirit) { $('spiritBar').classList.remove('show'); return; }
+  const guard = blocks.filter(b => b.alive && b.retinue).length;
+  $('sbName').innerHTML = spirit.power.glyph + ' ' + spirit.name.toUpperCase() +
+    ' <span style="opacity:.55;font-size:10px;letter-spacing:.18em">' + spirit.rank.toUpperCase() +
+    ' · ' + spirit.legions + ' LEGIONS</span>';
+  $('sbWhy').innerHTML = guard > 0
+    ? '<span class="guard">' + guard + ' of the retinue still standing — the spirit cannot be touched</span>'
+    : 'open. It yields to ' + spirit.opensTo.map(k => GLYPHS[k].glyph + ' ' + GLYPHS[k].name.split(' ')[0]).join(' or ') +
+      ' &nbsp;·&nbsp; ' + spirit.power.name + ': ' + spirit.power.effect;
+  $('sbHp').style.width = Math.max(0, spirit.hp / spirit.maxHp * 100) + '%';
+}
+
+// the office, made mechanical
+function spiritPower(dt) {
+  if (!spirit) return;
+  spirit.cool -= dt;
+  const live = blocks.filter(b => b.alive);
+  const id = spirit.power.id;
+
+  if (id === 'invisible') {
+    spirit.phase += dt;
+    const wasInvisible = spirit.invisible;
+    spirit.invisible = (spirit.phase % 5) < 2;
+    if (spirit.invisible !== wasInvisible && spirit.vulnerable) {
+      HELP.say(spirit.invisible ? 'it goes unseen — you cannot strike it now'
+                                : 'it returns to sight — strike', 2);
+    }
+  } else if (id === 'tempest') {
+    windX = Math.sin(spirit.t * 0.5) * 46;
+    for (const b of live) b.x += windX * dt;
+    ship.x += windX * 0.5 * dt;
+  } else if (id === 'earthquake' && spirit.cool <= 0) {
+    spirit.cool = 3.4;
+    for (const b of live) b.y += CELL * 0.55;
+    state.shake = 12;
+    HELP.say('the board is cast down', 2);
+  } else if (id === 'raise' && spirit.cool <= 0 && cfg.graveyard.length) {
+    spirit.cool = 4;
+    const grave = cfg.graveyard[cfg.graveyard.length - 1];
+    const b = spawnBlock(poolForWave(state.wave)[0], grave.x, grave.y);
+    if (b) { b.retinue = true; HELP.say('it raises the dead back up', 2.4); }
+  } else if (id === 'legions' && spirit.cool <= 0) {
+    spirit.cool = 4.5;
+    const b = spawnBlock(poolForWave(state.wave)[0], 1 + Math.floor(Math.random() * (COLS - 2)), 0);
+    if (b) { b.retinue = true; HELP.say('it calls up more of its legion', 2.4); }
+  } else if (id === 'discord' && spirit.cool <= 0) {
+    spirit.cool = 1.1;
+    for (const b of live) if (Math.abs(b.x - spirit.x) < CELL * 3) { b.hp -= 1; b.flash = 0.2; if (b.hp <= 0) b.alive = false; }
+  } else if (id === 'burn' && spirit.cool <= 0) {
+    spirit.cool = 2.6;
+    for (const b of live) if (Math.abs(b.x - spirit.x) < CELL * 2.2 && !b.burning) b.burning = 1.4;
+  } else if (id === 'heal' && spirit.vulnerable) {
+    spirit.hp = Math.min(spirit.maxHp, spirit.hp + dt * 1.5);
+  } else if (id === 'transform' && spirit.cool <= 0) {
+    spirit.cool = 5;
+    const all = ['fire', 'water', 'air', 'earth'];
+    spirit.opensTo = [all[Math.floor(Math.random() * all.length)]];
+    HELP.say('it changes shape — it now opens to <b>' + GLYPHS[spirit.opensTo[0]].glyph + ' ' +
+             GLYPHS[spirit.opensTo[0]].name + '</b>', 3.4);
+    syncSpiritBar();
+  } else if (id === 'tower' && spirit.cool <= 0) {
+    spirit.cool = 5.5;
+    const c = 1 + Math.floor(Math.random() * (COLS - 2));
+    const b = spawnBlock('salt', c, 2);
+    if (b) { b.retinue = true; HELP.say('it raises a wall in front of itself', 2.6); }
+  } else if (id === 'bind') {
+    ship.bound = true;
+  } else if (id === 'teach') {
+    state.revealAll = true;
+  }
+}
+
+function hitSpirit(shot) {
+  if (!spirit || !spirit.vulnerable || spirit.invisible) return false;
+  if (spirit.power.id === 'foresee' && Math.random() < 0.34) {
+    HELP.say('it saw that coming', 1.6);
+    return true;
+  }
+  if (spirit.opensTo.indexOf(shot.glyph) < 0) {
+    HELP.say('<b>' + GLYPHS[shot.glyph].name + '</b> does nothing to it. It yields only to ' +
+             spirit.opensTo.map(k => GLYPHS[k].glyph + ' ' + GLYPHS[k].name.split(' ')[0]).join(' or ') +
+             ' — its own planet and element.', 3.4);
+    spirit.flash = 0.2;
+    return true;
+  }
+  spirit.hp -= shot.power * 1.6;
+  spirit.flash = 0.25;
+  for (let i = 0; i < 6; i++) burst(spirit.x, spirit.y, '#d64933');
+  if (spirit.hp <= 0) defeatSpirit();
+  syncSpiritBar();
+  return true;
+}
+
+function defeatSpirit() {
+  const g = spirit;
+  state.score += g.score;
+  if (spiritBeaten.indexOf(g.id) < 0) spiritBeaten.push(g.id);
+  for (let i = 0; i < 40; i++) burst(g.x, g.y, '#f5c518');
+  state.shake = 16;
+  // whatever it stole comes back
+  for (const slot of g.stolen || []) ars.owned[slot] = (ars.owned[slot] || 0) + 1;
+  spirit = null;
+  ship.bound = false; state.revealAll = false; windX = 0;
+  $('spiritBar').classList.remove('show');
+  showSpirit(g);
+}
+
+// ===================================================================
+// The reading. This is the point of the encounter: having cut through
+// the retinue and beaten the spirit, you get its description verbatim.
+// ===================================================================
+function ordSuffix(n) {
+  if (n % 100 >= 11 && n % 100 <= 13) return 'th';
+  return ['th', 'st', 'nd', 'rd'][n % 10] || 'th';
+}
+
+function showSpirit(g) {
+  const facts = [
+    ['RANK', g.rank.toUpperCase()],
+    ['LEGIONS', g.legions],
+    ['PLANET', g.planet],
+    ['ELEMENT', g.element],
+    ['DIRECTION', g.direction || '—'],
+    ['YIELDS TO', g.opensTo.map(k => GLYPHS[k].glyph + ' ' + GLYPHS[k].name.split(' ')[0]).join(' / ')]
+  ].map(f => '<div class="sfact"><b>' + f[0] + '</b>' + f[1] + '</div>').join('');
+
+  $('spiritHead').innerHTML =
+    '<div class="sname">' + g.power.glyph + ' ' + g.name.toUpperCase() + '</div>' +
+    '<div class="srank">the ' + g.id + ordSuffix(g.id) + ' spirit &middot; ' + g.rank +
+    ' &middot; ' + g.rankInfo.how + '</div>' +
+    '<div class="sfacts">' + facts + '</div>' +
+    '<p style="font-size:12px;opacity:.85;max-width:74ch">' +
+    '<b>' + g.power.name + '</b> — ' + g.power.teach + '</p>';
+
+  $('spiritText').textContent = g.text;
+  $('spiritProv').innerHTML = (GOETIA_DOC ? GOETIA_DOC.source : '') +
+    (g.repaired ? ' <br><i>Note: the scan of this entry drops its header line; only the standard opening clause has been restored.</i>' : '') +
+    (GOETIA_DOC ? '<br>' + GOETIA_DOC.transcription_note : '');
+  $('spiritScreen').classList.add('show');
+}
+
+function buildRoster() {
+  const host = $('rosterBody');
+  if (!host || !GOETIA.length) return;
+  host.innerHTML = GOETIA.map(g =>
+    '<div class="rosterrow" data-id="' + g.id + '">' +
+      '<span class="rn">' + g.id + '</span>' +
+      '<span class="rname">' + g.name + '</span>' +
+      '<span class="rrank">' + g.rank + '</span>' +
+      '<span class="rweak">' + g.opensTo.map(k => GLYPHS[k].glyph).join(' ') +
+        ' <span style="opacity:.5">' + g.legions + ' leg.</span></span>' +
+      '<span class="roff">' + g.power.name + ' — ' + g.offices + '</span>' +
+    '</div>').join('');
+  host.querySelectorAll('.rosterrow').forEach(row => {
+    row.addEventListener('click', () => {
+      const g = GOETIA.find(x => x.id === +row.getAttribute('data-id'));
+      if (g) { $('rosterScreen').classList.remove('show'); showSpirit(g); }
+    });
+  });
 }
 
 function waveBlurb(n) {
@@ -449,6 +702,15 @@ function draw() {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(d.glyph, 0, 1);
 
+    // a TEACHER spirit reveals what opens every block
+    if (state.revealAll && b.alive) {
+      const opener = Object.keys(GLYPHS).find(k => k === b.glyphKey) ? b.glyphKey : null;
+      ctx.fillStyle = 'rgba(245,197,24,.9)';
+      ctx.font = '8.5px "Courier New", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(b.def.glyph, 0, -size / 2 - 2);
+    }
+
     // damage pips
     if (b.maxHp > 1 && b.alive) {
       const frac = Math.max(0, b.hp) / b.maxHp;
@@ -509,6 +771,39 @@ function draw() {
     ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
   }
   ctx.globalAlpha = 1;
+
+  // the spirit
+  if (spirit && !spirit.invisible) {
+    ctx.save();
+    ctx.translate(spirit.x, spirit.y);
+    const R = 26;
+    ctx.globalAlpha = spirit.vulnerable ? 1 : 0.55;
+    ctx.fillStyle = spirit.flash > 0 ? '#f5c518' : '#2a1c22';
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = spirit.vulnerable ? '#f5c518' : '#6b5b45';
+    ctx.lineWidth = spirit.vulnerable ? 2.5 : 1.5;
+    ctx.stroke();
+    // a ring of marks for the legions it commands
+    const marks = Math.min(24, Math.round(spirit.legions / 3));
+    ctx.strokeStyle = 'rgba(245,197,24,.5)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < marks; i++) {
+      const a = (i / marks) * Math.PI * 2 + spirit.t * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * (R + 5), Math.sin(a) * (R + 5));
+      ctx.lineTo(Math.cos(a) * (R + 11), Math.sin(a) * (R + 11));
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#f0e6d2';
+    ctx.font = '20px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(spirit.power.glyph, 0, 1);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(240,230,210,.85)';
+    ctx.font = '9.5px "Courier New", monospace';
+    ctx.fillText(spirit.name.toUpperCase(), 0, R + 20);
+    ctx.restore();
+  }
 
   // the vessel
   ctx.save();
@@ -673,7 +968,20 @@ window.addEventListener('keydown', function (e) {
     $('cabinetScreen').classList.toggle('show');
     return;
   }
-  if (k === 'escape') { $('cabinetScreen').classList.remove('show'); return; }
+  if (k === 'g') {
+    e.preventDefault();
+    buildRoster();
+    $('rosterScreen').classList.toggle('show');
+    return;
+  }
+  if (k === 'escape') {
+    ['cabinetScreen', 'spiritScreen', 'rosterScreen'].forEach(id => $(id).classList.remove('show'));
+    return;
+  }
+  if ($('spiritScreen').classList.contains('show')) {
+    if (isSpace || k === 'enter') { $('spiritScreen').classList.remove('show'); e.preventDefault(); }
+    return;
+  }
   if (HELP.isManualOpen && HELP.isManualOpen()) return;
 
   keys[k] = true;
@@ -720,6 +1028,9 @@ function startCabinet() {
   $('overScreen').classList.remove('show');
   state.mode = 'cabinet'; state.over = false; state.running = true;
   state.score = 0; state.best = 0; state.wave = 0;
+  spirit = null; windX = 0; ship.bound = false; state.revealAll = false;
+  $('spiritBar').classList.remove('show');
+  ['spiritScreen', 'rosterScreen'].forEach(id => $(id).classList.remove('show'));
   buildCabinet(); buildAmmoBar(); syncHUD();
   HELP.say('<b>THE CABINET.</b> Nothing here can hurt you. Shoot anything — the panel above ' +
            'tells you what it is and why it did that. Change matter with <b>1–7</b>; that is ' +
@@ -731,6 +1042,10 @@ function startWaves() {
   $('overScreen').classList.remove('show');
   state.mode = 'waves'; state.over = false; state.running = true;
   state.score = 0; state.lives = 3; state.wave = 1; state.best = 0;
+  spirit = null; spiritBeaten = []; windX = 0;
+  ship.bound = false; state.revealAll = false;
+  $('spiritBar').classList.remove('show');
+  ['spiritScreen', 'rosterScreen'].forEach(id => $(id).classList.remove('show'));
   ars = makeArsenal();
   ship.x = viewW() / 2; ship.invuln = 1.5;
   buildWave(1); buildAmmoBar(); syncHUD();
@@ -743,6 +1058,11 @@ $('startWaves').addEventListener('click', function () { startWaves(); this.blur(
 $('againBtn').addEventListener('click', function () { startWaves(); this.blur(); });
 $('backCabinet').addEventListener('click', function () { startCabinet(); this.blur(); });
 $('cabinetClose').addEventListener('click', function () { $('cabinetScreen').classList.remove('show'); this.blur(); });
+$('spiritClose').addEventListener('click', function () { $('spiritScreen').classList.remove('show'); this.blur(); });
+$('spiritRoster').addEventListener('click', function () {
+  $('spiritScreen').classList.remove('show'); buildRoster(); $('rosterScreen').classList.add('show'); this.blur();
+});
+$('rosterClose').addEventListener('click', function () { $('rosterScreen').classList.remove('show'); this.blur(); });
 
 // ===================================================================
 // Loop — one of them, dt clamped at both ends
@@ -755,7 +1075,10 @@ function frame(now) {
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (w !== canvas._lw || h !== canvas._lh) { canvas._lw = w; canvas._lh = h; layout(); }
 
-  if (state.running && !state.paused && !state.over && !(HELP.isManualOpen && HELP.isManualOpen())) {
+  const reading = $('spiritScreen').classList.contains('show') ||
+                  $('rosterScreen').classList.contains('show');
+  if (state.running && !state.paused && !state.over && !reading &&
+      !(HELP.isManualOpen && HELP.isManualOpen())) {
     update(dt);
     syncHUD();
   }
@@ -767,6 +1090,13 @@ function frame(now) {
 // ===================================================================
 // Boot
 // ===================================================================
+// The roster loads asynchronously; the game is playable before it arrives and
+// the first gate wave simply waits for it.
+fetch('goetia-text.json?v=2')
+  .then(r => r.json())
+  .then(doc => { GOETIA_DOC = doc; GOETIA = buildGoetia(doc); buildRoster(); })
+  .catch(() => { GOETIA = []; });
+
 layout();
 buildAmmoBar();
 buildSpellBar();
@@ -797,6 +1127,7 @@ HELP.install({
     ['C', 'PROJECTIO'],
     ['Shift', 'TAKE POWER-UP'],
     ['Tab', 'glyph cabinet'],
+    ['G', 'the 72 spirits'],
     ['P', 'pause']
   ],
   stripNote: '<b>Power-ups:</b> break blocks → collect ◆ capsules → the bar at the bottom advances → ' +
@@ -827,6 +1158,21 @@ HELP.install({
           ['X', '🜔 COAGULA', 'freezes every block for six seconds', 'you need to kill a Mercury, which otherwise teleports away'],
           ['C', '☉ PROJECTIO', 'turns the lowest row to gold', 'you have SOL loaded — otherwise you have built a wall']
         ] } },
+    { title: 'THE SEVENTY-TWO SPIRITS',
+      body: '<p>Every third wave is a <b>gate</b>: a spirit of the Goetia arrives with its retinue. ' +
+            'Everything it does is read off what the Lemegeton actually says about it.</p>' +
+            '<div class="note"><b>Its rank is how it moves.</b> A King advances at its own pace and ' +
+            'does not deviate; a Knight charges straight at you; a Marquis keeps its distance and ' +
+            'circles. Seven ranks, seven bearings.<br>' +
+            '<b>Its legions are its retinue.</b> Bael commands 66 and arrives with a bodyguard to ' +
+            'match. <b>You must cut through the retinue before the spirit can be touched at all.</b><br>' +
+            '<b>Its office is its power.</b> One whose office is to sow discord sets its own retinue ' +
+            'against itself; one that teaches the sciences reveals what opens every block; one that ' +
+            'makes men invisible goes unseen and cannot be struck until it returns.<br>' +
+            '<b>Its planet and element are its weakness.</b> It yields only to the matter of its own ' +
+            'planet or its own element — everything else is wasted.</div>' +
+            '<p>Beat one and you may read its description <b>verbatim</b> from the Lemegeton. Press ' +
+            '<b>G</b> at any time for the whole hierarchy, and click any spirit to read it.</p>' },
     { title: 'THE TWENTY-SIX BLOCKS',
       body: '<p>Press <b>Tab</b> at any time in game for the full cabinet. The short version: ' +
             'elements are the simple behaviours, principles are sulphur/salt/mercury (spread, grow, ' +
@@ -844,5 +1190,8 @@ window.ABI = {
   get ars(){ return ars; }, get ship(){ return ship; }, get keys(){ return keys; },
   GLYPHS: GLYPHS, strike: strike, frame: frame, startCabinet: startCabinet,
   startWaves: startWaves, doCast: doCast, makeBlock: makeBlock, setAmmo: setAmmo,
-  get cfg(){ return cfg; }
+  get cfg(){ return cfg; },
+  get spirit(){ return spirit; }, get GOETIA(){ return GOETIA; },
+  startGate: startGate, showSpirit: showSpirit, hitSpirit: hitSpirit,
+  defeatSpirit: defeatSpirit, get beaten(){ return spiritBeaten; }
 };

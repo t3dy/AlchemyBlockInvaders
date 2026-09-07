@@ -549,3 +549,77 @@ resize_window { width: 1200, height: 860 }
 Screenshots of the deployed page also timed out repeatedly in this pane while the DOM and the
 game state were both perfectly readable. Where a screenshot would have been the evidence, the
 numbers above were taken instead.
+
+
+---
+
+# 2026-09-07 (later still) - the seventy-two spirits of the Goetia
+
+## What was built
+
+All 72 spirits are enemies. Every mechanic is read off the Lemegeton rather than invented:
+
+| from the text | becomes |
+|---|---|
+| **rank** | how it moves. King advances and does not deviate; Knight charges; Marquis circles at a distance; Earl darts in and out; President drifts and works at range; Prince surges; Duke weaves |
+| **legions** | the size of its retinue, 4-10 blocks. **The spirit cannot be touched while any of its retinue stands** - that is what makes it a mini-boss rather than a large enemy |
+| **offices** | its power. 17 archetypes, matched against the office wording FIRST and only widened to the full description if the office says nothing |
+| **planet + element** | its weakness. It yields only to the matter of its own attributions |
+
+Beat one and its description is shown verbatim, with rank, legions, planet, element, direction
+and provenance. `G` opens the whole hierarchy at any time; any row can be clicked to read.
+
+## Verified
+
+A gate reached through the game's own wave logic, not by calling the function:
+
+| step | result |
+|---|---|
+| wave 3 arrives | gate triggered automatically, spirit **Aim**, Duke, 26 legions, BEARER OF FLAME (his office is to set cities on fire), opens to water or fire |
+| retinue on board | 6, and the bar reads *"6 of the retinue still standing - the spirit cannot be touched"* |
+| strike while guarded | **hit points unchanged, not vulnerable** |
+| 600 frames of the encounter | the bearing moves it, its power fires, no exceptions |
+| retinue cleared | becomes vulnerable, narrator says so |
+| wrong matter (fire on a mercurius/earth spirit) | **hit points unchanged**, narrator names what it does yield to |
+| right matter | dead in 7-9 shots |
+| on defeat | reading panel opens, 755 characters of verbatim text, full provenance |
+
+Roster integrity across all 72: every spirit has text (260-2,400 characters), a weakness that
+maps to a real ammunition glyph, a retinue between 4 and 10, and a bearing. 17 distinct powers
+in play; all seven ranks represented.
+
+## The text, and the copyright decision
+
+Ted asked for **Dr Rudd's** descriptions. Rudd's Harley MS 6483 is a seventeenth-century
+witness of the Lemegeton, and Skinner & Rankine's edition of it is at
+`E:\pdf\Grimoire\Sourceworks of Ceremonial Magic...pdf` - **in copyright**. So the shipped
+text is the same Solomonic descriptions from the **public-domain Mathers/Crowley edition of
+1904**, pre-OCR'd at `E:\pdf\crowley\plain_text_drafts\`. Skinner & Rankine was consulted
+for understanding; none of its editorial matter is reproduced. The provenance panel in the
+game says all of this on screen.
+
+### Extracting it was three passes
+
+1. **Anchoring on the parenthesised numbers failed** - 18 of 72 missing, because the scan
+   renders the headers inconsistently ("SAMIGINA, or GAMIGIN.-", "LERAJE, OR LERAIKHA." with
+   no dash at all).
+2. **Anchoring on the ordinal phrase got 67**, and revealed the real problem: the scan splits
+   words across line breaks with a hyphen *and injects figure captions into the gap* -
+   "musical instru- Figure 28. Figure 29. ments". So the ordinals themselves were broken
+   ("The Thir- teenth Spirit").
+3. **Strip captions, then rejoin hyphens, then locate entries** gets all 72 clean. One entry,
+   Andras (63), has its header dropped entirely by the scan; the body is verbatim and only the
+   standard opening clause is restored. It is flagged `repaired: true` in the data and the
+   reading panel says so.
+
+Final: 72/72, no hyphen splits, no figure captions, 260-2,400 characters each.
+
+## Tuning that mattered
+
+The first pass matched office keywords against the **whole description**, which let a word
+occurring in passing decide the mechanic - Caim "answereth in burning ashes" became a fire
+spirit, which is not one of his offices. Matching the office field first and widening only if
+it says nothing fixed it. Two archetypes were also swallowing more than half the hierarchy
+because "legion" appears in every single entry ("he governeth N Legions") and "shape" appears
+in almost every appearance ("appeareth in the form of"). Both now require the office to be
+about commanding men in arms, or about transforming somebody else.
