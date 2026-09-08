@@ -1,0 +1,1460 @@
+{
+ "_note": "The 28 Arabic letters with the facts the engine derives its powers from. Adapted from TurkaGame v2/data/letters.json, which builds each letter's primitives from checkable facts about its written form and its grammar - not from a table someone chose. Divisions, registers and the fact-to-primitive map are carried over unchanged so the two projects cannot drift apart.",
+ "_source": "C:/Dev/TurkaGame/v2/data/letters.json",
+ "divisions": {
+  "abjad": "1..1000, the series as the tradition numbers it. PORTAL: abjad-numerology.",
+  "nurani_zulmani": "The 14 muqaṭṭaʿāt against the other 14. PORTAL: ilm-al-huruf.",
+  "sun_moon": "The 14 letters the definite article's lām assimilates to, against the 14 it does not. Standard grammar.",
+  "connecting": "The 6 letters that never join what follows (ا د ذ ر ز و). Standard orthography."
+ },
+ "fact_to_primitive": {
+  "vertical": {
+   "op": "AXIS",
+   "from": "a single upright stroke"
+  },
+  "closed": {
+   "op": "BIND",
+   "from": "a form that encloses"
+  },
+  "tail": {
+   "op": "POUR",
+   "from": "a tail below the line"
+  },
+  "dots_above": {
+   "op": "RAISE",
+   "from": "dots above"
+  },
+  "dots_below": {
+   "op": "LOWER",
+   "from": "dots below"
+  },
+  "non_connecting": {
+   "op": "SEVER",
+   "from": "a letter that never joins what follows"
+  },
+  "sun": {
+   "op": "ASSIMILATE",
+   "from": "a sun letter: the article's lām becomes it"
+  },
+  "moon": {
+   "op": "DISTINGUISH",
+   "from": "a moon letter: the article's lām stays itself"
+  }
+ },
+ "letters": [
+  {
+   "glyph": "ا",
+   "translit": "ʾ",
+   "name": "alif",
+   "abjad": 1,
+   "class": "nurani",
+   "form": {
+    "orientation": "vertical",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": false
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": false,
+    "articulation": "throat"
+   },
+   "facts": {
+    "vertical": true,
+    "closed": false,
+    "tail": false,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": true,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "AXIS",
+    "SEVER",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "AXIS",
+     "n": true,
+     "from": "a single upright stroke"
+    },
+    {
+     "op": "SEVER",
+     "n": true,
+     "from": "a letter that never joins what follows"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": "Avatar of divine Oneness and of the beginning of creation. Lightest of all: abjad 1."
+  },
+  {
+   "glyph": "ب",
+   "translit": "b",
+   "name": "bāʾ",
+   "abjad": 2,
+   "class": "zulmani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 1,
+    "dot_position": "below",
+    "closed": false,
+    "tail": false
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "lip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": false,
+    "dots_above": 0,
+    "dots_below": 1,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "LOWER",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "LOWER",
+     "n": 1,
+     "from": "dots below"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": "First of the dark letters and the fountainhead of all duality. The Qur'an and the Torah both open on it rather than on alif — the conundrum the Risāla al-Bāʾiyya was written to solve."
+  },
+  {
+   "glyph": "ج",
+   "translit": "j",
+   "name": "jīm",
+   "abjad": 3,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 1,
+    "dot_position": "below",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "palate"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 1,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "LOWER",
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "LOWER",
+     "n": 1,
+     "from": "dots below"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "د",
+   "translit": "d",
+   "name": "dāl",
+   "abjad": 4,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": false
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": false,
+    "articulation": "tongue-tip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": false,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": true,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "SEVER",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "SEVER",
+     "n": true,
+     "from": "a letter that never joins what follows"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ه",
+   "translit": "h",
+   "name": "hāʾ",
+   "abjad": 5,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": true,
+    "tail": false
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "throat"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": false,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "BIND",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "و",
+   "translit": "w",
+   "name": "wāw",
+   "abjad": 6,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": true,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": false,
+    "articulation": "lip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": true,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "BIND",
+    "POUR",
+    "SEVER",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "SEVER",
+     "n": true,
+     "from": "a letter that never joins what follows"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ز",
+   "translit": "z",
+   "name": "zāy",
+   "abjad": 7,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": false,
+    "articulation": "whistling"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": true,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "POUR",
+    "SEVER",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "SEVER",
+     "n": true,
+     "from": "a letter that never joins what follows"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ح",
+   "translit": "ḥ",
+   "name": "ḥāʾ",
+   "abjad": 8,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "throat"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ط",
+   "translit": "ṭ",
+   "name": "ṭāʾ",
+   "abjad": 9,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": true,
+    "tail": false
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "tongue-tip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": false,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "BIND",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ي",
+   "translit": "y",
+   "name": "yāʾ",
+   "abjad": 10,
+   "class": "nurani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 2,
+    "dot_position": "below",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "palate"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 2,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "LOWER",
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "LOWER",
+     "n": 2,
+     "from": "dots below"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ك",
+   "translit": "k",
+   "name": "kāf",
+   "abjad": 20,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": false
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "back"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": false,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ل",
+   "translit": "l",
+   "name": "lām",
+   "abjad": 30,
+   "class": "nurani",
+   "form": {
+    "orientation": "vertical",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "tongue-tip"
+   },
+   "facts": {
+    "vertical": true,
+    "closed": false,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "AXIS",
+    "POUR",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "AXIS",
+     "n": true,
+     "from": "a single upright stroke"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "م",
+   "translit": "m",
+   "name": "mīm",
+   "abjad": 40,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": true,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "lip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "BIND",
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ن",
+   "translit": "n",
+   "name": "nūn",
+   "abjad": 50,
+   "class": "nurani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "tongue-tip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "POUR",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": "Opens Sūra 68, which is named for it. A light letter carrying a middling weight."
+  },
+  {
+   "glyph": "س",
+   "translit": "s",
+   "name": "sīn",
+   "abjad": 60,
+   "class": "nurani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "whistling"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "POUR",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ع",
+   "translit": "ʿ",
+   "name": "ʿayn",
+   "abjad": 70,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "throat"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ف",
+   "translit": "f",
+   "name": "fāʾ",
+   "abjad": 80,
+   "class": "zulmani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": true,
+    "tail": false
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "lip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": false,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "RAISE",
+    "BIND",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ص",
+   "translit": "ṣ",
+   "name": "ṣād",
+   "abjad": 90,
+   "class": "nurani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": true,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "whistling"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "BIND",
+    "POUR",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": "Opens Sūra 38, which is named for it."
+  },
+  {
+   "glyph": "ق",
+   "translit": "q",
+   "name": "qāf",
+   "abjad": 100,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 2,
+    "dot_position": "above",
+    "closed": true,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "back"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": true,
+    "dots_above": 2,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "RAISE",
+    "BIND",
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 2,
+     "from": "dots above"
+    },
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": "Opens Sūra 50, which is named for it."
+  },
+  {
+   "glyph": "ر",
+   "translit": "r",
+   "name": "rāʾ",
+   "abjad": 200,
+   "class": "nurani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 0,
+    "dot_position": "none",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": false,
+    "articulation": "tongue-tip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 0,
+    "dots_below": 0,
+    "non_connecting": true,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "POUR",
+    "SEVER",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "SEVER",
+     "n": true,
+     "from": "a letter that never joins what follows"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ش",
+   "translit": "š",
+   "name": "shīn",
+   "abjad": 300,
+   "class": "zulmani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 3,
+    "dot_position": "above",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "palate"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 3,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "POUR",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 3,
+     "from": "dots above"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ت",
+   "translit": "t",
+   "name": "tāʾ",
+   "abjad": 400,
+   "class": "zulmani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 2,
+    "dot_position": "above",
+    "closed": false,
+    "tail": false
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "tongue-tip"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": false,
+    "dots_above": 2,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 2,
+     "from": "dots above"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ث",
+   "translit": "ṯ",
+   "name": "thāʾ",
+   "abjad": 500,
+   "class": "zulmani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 3,
+    "dot_position": "above",
+    "closed": false,
+    "tail": false
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "teeth"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": false,
+    "dots_above": 3,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 3,
+     "from": "dots above"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "خ",
+   "translit": "ḫ",
+   "name": "khāʾ",
+   "abjad": 600,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "throat"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "RAISE",
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ذ",
+   "translit": "ḏ",
+   "name": "dhāl",
+   "abjad": 700,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": false,
+    "tail": false
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": false,
+    "articulation": "teeth"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": false,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": true,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "SEVER",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "SEVER",
+     "n": true,
+     "from": "a letter that never joins what follows"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ض",
+   "translit": "ḍ",
+   "name": "ḍād",
+   "abjad": 800,
+   "class": "zulmani",
+   "form": {
+    "orientation": "horizontal",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": true,
+    "tail": true
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "side"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": true,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "BIND",
+    "POUR",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "ظ",
+   "translit": "ẓ",
+   "name": "ẓāʾ",
+   "abjad": 900,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": true,
+    "tail": false
+   },
+   "grammar": {
+    "sun": true,
+    "connects_forward": true,
+    "articulation": "teeth"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": true,
+    "tail": false,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": true,
+    "moon": false
+   },
+   "primitives": [
+    "RAISE",
+    "BIND",
+    "ASSIMILATE"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "BIND",
+     "n": true,
+     "from": "a form that encloses"
+    },
+    {
+     "op": "ASSIMILATE",
+     "n": true,
+     "from": "a sun letter: the article's lām becomes it"
+    }
+   ],
+   "note": null
+  },
+  {
+   "glyph": "غ",
+   "translit": "ġ",
+   "name": "ghayn",
+   "abjad": 1000,
+   "class": "zulmani",
+   "form": {
+    "orientation": "mixed",
+    "dots": 1,
+    "dot_position": "above",
+    "closed": false,
+    "tail": true
+   },
+   "grammar": {
+    "sun": false,
+    "connects_forward": true,
+    "articulation": "throat"
+   },
+   "facts": {
+    "vertical": false,
+    "closed": false,
+    "tail": true,
+    "dots_above": 1,
+    "dots_below": 0,
+    "non_connecting": false,
+    "sun": false,
+    "moon": true
+   },
+   "primitives": [
+    "RAISE",
+    "POUR",
+    "DISTINGUISH"
+   ],
+   "primitive_detail": [
+    {
+     "op": "RAISE",
+     "n": 1,
+     "from": "dots above"
+    },
+    {
+     "op": "POUR",
+     "n": true,
+     "from": "a tail below the line"
+    },
+    {
+     "op": "DISTINGUISH",
+     "n": true,
+     "from": "a moon letter: the article's lām stays itself"
+    }
+   ],
+   "note": "Closes the series at 1000. Nothing in the tower is heavier."
+  }
+ ]
+}

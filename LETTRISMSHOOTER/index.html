@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lettrism Shooter</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #0d0f12; color: #e8e2d4;
+    font-family: "Courier New", ui-monospace, monospace;
+    user-select: none;
+  }
+  #game { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+
+  /* ---------- top left ---------- */
+  #hud { position: fixed; top: 10px; left: 14px; font-size: 11px; line-height: 1.7; z-index: 10; }
+  #hud .n { font-size: 16px; }
+  #hud .lbl { opacity: .55; letter-spacing: .16em; font-size: 9px; }
+  #breath { width: 190px; height: 8px; border: 1px solid #4a5058; position: relative; margin-top: 3px; }
+  #breath i { position: absolute; inset: 1px auto 1px 1px; background: #c9a227; display: block; width: 100%; }
+  #breath span { position: absolute; right: 4px; top: -2px; font-size: 8.5px; opacity: .8; }
+
+  /* ---------- the letters you carry ---------- */
+  #heldWrap { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10; }
+  #held { display: flex; gap: 5px; justify-content: center; }
+  #held .tile {
+    border: 1px solid #4a5058; background: rgba(16,20,25,.9); padding: 4px 9px 5px;
+    text-align: center; min-width: 54px; cursor: pointer;
+  }
+  #held .tile.on { border-color: #c9a227; background: rgba(201,162,39,.16); }
+  #held .tile .g { font-size: 22px; font-family: "Times New Roman", serif; line-height: 1.1; }
+  #held .tile .k { font-size: 8.5px; opacity: .6; letter-spacing: .08em; }
+  #held .tile .c { font-size: 8.5px; color: #c9a227; }
+  #held .none { font-size: 10.5px; opacity: .55; padding: 8px 12px; border: 1px dashed #4a5058; }
+
+  /* ---------- the selected letter, always on screen ---------- */
+  #current {
+    position: fixed; bottom: 12px; left: 14px; width: 268px; z-index: 10;
+    border: 1px solid #4a5058; background: rgba(16,20,25,.92); padding: 9px 11px;
+  }
+  #current .row { display: flex; gap: 10px; align-items: baseline; }
+  #curGlyph { font-size: 30px; font-family: "Times New Roman", serif; color: #c9a227; line-height: 1; }
+  #curName { font-size: 10.5px; opacity: .8; }
+  #curOps { font-size: 10px; line-height: 1.6; margin-top: 6px; }
+  #curOps b { color: #c9a227; font-weight: normal; letter-spacing: .06em; }
+  #curOps .d { opacity: .65; }
+
+  /* ---------- the landing preview ---------- */
+  #preview {
+    position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+    border: 1px solid #4a5058; background: rgba(16,20,25,.93); padding: 7px 13px;
+    font-size: 11px; z-index: 10; display: none; text-align: center; min-width: 300px;
+  }
+  #preview.show { display: block; }
+  #preview.ok { border-color: #c9a227; }
+  #preview.no { border-color: #b5342a; opacity: .85; }
+  #pvOp { font-size: 12.5px; letter-spacing: .12em; }
+  #preview.ok #pvOp { color: #c9a227; }
+  #preview.no #pvOp { color: #b5342a; }
+  #pvWhy { font-size: 10px; opacity: .78; margin-top: 2px; }
+  #pvCost { font-size: 9px; opacity: .55; margin-top: 2px; }
+
+  /* ---------- overlays ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    background: rgba(8,10,12,.95); overflow-y: auto; padding: 34px 20px 60px;
+  }
+  .overlay.show { display: block; }
+  .sheet { max-width: 880px; margin: 0 auto; }
+  .sheet h1 { font-size: 25px; letter-spacing: .16em; font-weight: normal; margin: 0 0 8px; }
+  .sheet .sub { opacity: .68; font-style: italic; margin: 0 0 22px; font-size: 12.5px; }
+  .sheet h3 {
+    font-size: 11px; letter-spacing: .2em; font-weight: normal; opacity: .75;
+    margin: 24px 0 10px; padding-bottom: 5px; border-bottom: 1px solid #333b44;
+  }
+  .sheet p { font-size: 13px; line-height: 1.7; max-width: 74ch; }
+  .btn {
+    cursor: pointer; border: 1px solid #c9a227; background: transparent; color: #c9a227;
+    font: inherit; font-size: 12px; letter-spacing: .16em; padding: 10px 22px; margin: 16px 8px 0 0;
+  }
+  .btn:hover { background: rgba(201,162,39,.16); }
+  .btn.quiet { border-color: #4a5058; color: #b6bcc4; }
+  .kv { display: grid; grid-template-columns: 132px 1fr; gap: 6px 14px; font-size: 12px; }
+  .kv kbd { border: 1px solid #6f7b86; padding: 1px 6px; font: inherit; font-size: 11px; text-align: center; }
+
+  /* ---------- the card explaining a letter ---------- */
+  .card {
+    position: fixed; inset: 0; z-index: 45; display: none;
+    background: rgba(8,10,12,.9); overflow-y: auto; padding: 46px 20px;
+  }
+  .card.show { display: block; }
+  .cardsheet {
+    max-width: 700px; margin: 0 auto; border: 1px solid #4a5058;
+    background: #101419; padding: 24px 28px;
+  }
+  .lihead { display: flex; gap: 20px; align-items: center; margin-bottom: 16px; }
+  #liGlyph { font-size: 70px; font-family: "Times New Roman", serif; color: #c9a227; line-height: 1; }
+  #liName { font-size: 20px; letter-spacing: .12em; }
+  #liName .tr { opacity: .5; font-size: 13px; margin-left: 8px; }
+  .lf { display: grid; grid-template-columns: 130px 1fr; gap: 4px 12px; font-size: 11.5px;
+        padding: 3px 0; border-bottom: 1px solid #1e242b; }
+  .lf b { font-weight: normal; opacity: .55; letter-spacing: .12em; font-size: 9.5px; }
+  .lo { border-left: 2px solid #c9a227; padding: 5px 0 5px 12px; margin: 10px 0; font-size: 12px; }
+  .lo b { color: #c9a227; font-weight: normal; letter-spacing: .08em; }
+  .lo .from { font-size: 10.5px; opacity: .62; font-style: italic; margin-top: 2px; }
+  .lo .hint { font-size: 11px; opacity: .85; margin-top: 2px; }
+  #liNote { font-size: 11.5px; opacity: .78; line-height: 1.6; margin-top: 14px; font-style: italic; }
+
+  /* ---------- the chamber brief ---------- */
+  #chamberCard {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(600px, 90vw); border: 1px solid #c9a227; background: rgba(13,15,18,.97);
+    padding: 20px 24px; z-index: 44; display: none;
+  }
+  #chamberCard.show { display: block; }
+  #chName { font-size: 19px; letter-spacing: .16em; color: #c9a227; margin-bottom: 8px; }
+  #chBrief { font-size: 12.5px; line-height: 1.7; }
+
+  /* ---------- the codex ---------- */
+  .crow {
+    display: grid; grid-template-columns: 42px 1fr 54px 2fr; gap: 12px; align-items: baseline;
+    padding: 5px 8px; font-size: 11.5px; border-bottom: 1px solid #1e242b; cursor: pointer;
+  }
+  .crow:hover { background: rgba(201,162,39,.1); }
+  .crow .cg { font-size: 21px; font-family: "Times New Roman", serif; color: #c9a227; }
+  .crow .cn { letter-spacing: .08em; }
+  .crow .ca { opacity: .5; }
+  .crow .cp { font-size: 10px; opacity: .68; }
+
+  @media (max-width: 780px) {
+    #current { display: none; }
+    #held .tile { min-width: 42px; padding: 3px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div><span class="n" id="chamberN">1/5</span> <span class="lbl">CHAMBER</span></div>
+  <div class="lbl">BREATH</div>
+  <div id="breath"><i id="breathFill"></i><span id="breathN">100</span></div>
+</div>
+
+<div id="preview">
+  <div id="pvOp"></div>
+  <div id="pvWhy"></div>
+  <div id="pvCost"></div>
+</div>
+
+<div id="current">
+  <div class="row"><span id="curGlyph">—</span><span id="curName">nothing held</span></div>
+  <div id="curOps"></div>
+</div>
+
+<div id="heldWrap"><div id="held"></div></div>
+
+<div id="chamberCard">
+  <div id="chName"></div>
+  <div id="chBrief"></div>
+  <button class="btn" id="chamberClose">BEGIN</button>
+</div>
+
+<div class="card" id="letterCard">
+  <div class="cardsheet">
+    <div class="lihead"><div id="liGlyph"></div><div id="liName"></div></div>
+    <div id="liFacts"></div>
+    <h3 style="font-size:10px;letter-spacing:.2em;opacity:.6;margin:18px 0 4px">WHAT IT LETS YOU DO, AND WHY</h3>
+    <div id="liOps"></div>
+    <div id="liNote"></div>
+    <button class="btn" id="letterClose">CLOSE</button>
+  </div>
+</div>
+
+<div class="overlay" id="codexScreen">
+  <div class="sheet">
+    <h1>THE TWENTY-EIGHT</h1>
+    <p class="sub">every letter, its abjad value, and the edits its form grants &mdash; click any to read it</p>
+    <div id="codexBody"></div>
+    <button class="btn" id="codexClose">BACK &nbsp;·&nbsp; Tab or Esc</button>
+  </div>
+</div>
+
+<div class="overlay show" id="startScreen">
+  <div class="sheet">
+    <h1>LETTRISM SHOOTER</h1>
+    <p class="sub">the developer mode of reality</p>
+
+    <p>
+      Al-Būnī calls the twenty-eight Arabic letters the <i>corporeal letters</i> &mdash; "the
+      building blocks of manifest reality" &mdash; and Ibn Turka treats the alphabet as the
+      cosmos's source code. So in this one the alphabet is not the theme. <b>It is the level
+      editor.</b>
+    </p>
+    <p>
+      You collect tiles bearing the letters, and each grants the world-edit that its own written
+      form dictates. A single upright stroke <b>raises a pillar</b>. A closed loop <b>bridges a
+      chasm</b>. A descending tail <b>opens a channel</b> through solid matter. Dots above lift
+      the ground and dots below sink it. And the six letters that never join what follows
+      &mdash; which is simply why an Arabic word looks like several pieces on the page &mdash;
+      <b>cut</b>, and are the only thing that opens warded stone.
+    </p>
+    <p>
+      You cannot shoot your way to the gate. Ordinary stone yields to a shot; a ward does not, a
+      chasm cannot be shot across, and a ledge cannot be shot up to. You have to <b>edit the
+      world</b> instead &mdash; and the ghost under your cursor is a real landing preview: the
+      same calculation that would change the world, drawn rather than applied.
+    </p>
+
+    <button class="btn" id="startBtn">ENTER THE FIRST CHAMBER</button>
+
+    <h3>CONTROLS</h3>
+    <div class="kv">
+      <span><kbd>A</kbd> <kbd>D</kbd></span><span>walk</span>
+      <span><kbd>W</kbd></span><span>jump</span>
+      <span><kbd>Space</kbd></span><span>shoot &mdash; opens ordinary stone, nothing else</span>
+      <span><kbd>mouse</kbd></span><span>aim the edit cursor; the ghost shows what will happen</span>
+      <span><kbd>click</kbd> / <kbd>F</kbd></span><span><b>commit the edit</b></span>
+      <span><kbd>1</kbd> &ndash; <kbd>9</kbd></span><span>choose a letter you are carrying</span>
+      <span><kbd>Q</kbd> <kbd>E</kbd></span><span>cycle letters</span>
+      <span><kbd>Tab</kbd></span><span>the codex of all twenty-eight</span>
+      <span><kbd>R</kbd></span><span>restart the chamber</span>
+      <span><kbd>H</kbd></span><span>the full manual</span>
+    </div>
+    <p style="opacity:.7;font-size:11.5px;margin-top:14px">
+      A side project of <a href="../" style="color:#c9a227">Four Alchemical Games</a>, built on the
+      lettrist engine from <b>TurkaGame</b>. Every power is derived from a checkable fact about
+      the letter, never assigned by taste.
+    </p>
+  </div>
+</div>
+
+<div class="overlay" id="overScreen">
+  <div class="sheet">
+    <h1 id="overTitle">THE GATE OPENS</h1>
+    <p class="sub" id="overSub"></p>
+    <p id="overLine"></p>
+    <button class="btn" id="againBtn">THE NEXT CHAMBER</button>
+  </div>
+</div>
+
+<script src="../shared/help.js"></script>
+<script src="src/edit.js?v=1"></script>
+<script src="src/game.js?v=1"></script>
+</body>
+</html>
