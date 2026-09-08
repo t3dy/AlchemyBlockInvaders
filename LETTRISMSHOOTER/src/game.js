@@ -34,6 +34,7 @@ const state = {
   word: [],               // the letters composed into a word
   composing: false,
   editsMade: 0, shotsFired: 0, deaths: 0, kills: 0,
+  combo: 0, bestCombo: 0, comboT: 0,
   hp: 3, maxHp: 3, spawnT: 0, undone: 0,
   recent: []              // the edits you have made, so the eraser can hunt them
 };
@@ -233,6 +234,7 @@ function updateFoes(dt) {
   for (let i = foes.length - 1; i >= 0; i--) {
     const f = foes[i];
     f.t += dt; f.cool -= dt;
+    if (f.snared > 0) { f.snared -= dt; continue; }        // held fast by a bond
     if (f.flash > 0) f.flash -= dt;
     if (f.hp <= 0) {
       for (let k = 0; k < 10; k++) burst(f.x, f.y, f.def.color);
@@ -520,6 +522,65 @@ canvas.addEventListener('mousedown', function (e) {
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 // ===================================================================
+// THE GUN IS THE LETTER
+//
+// The letters were the editor and the gun was a separate, dumb thing —
+// two systems that never spoke. Now the letter you are holding is also
+// the shot you are firing, so the choice matters every second rather
+// than only when you stop to edit. The character of the shot comes from
+// the same primitive that gives the edit, so nothing new has to be
+// learned: an upright stroke drives a lance, a severing letter cuts, a
+// tail pours the shot downward.
+//
+// A shot is always free. Only its character changes.
+// ===================================================================
+const GUNS = {
+  AXIS:        { id:'AXIS', name:'LANCE', color:'#e8e2d4', speed:620, cool:0.17, n:1, dmg:1,
+                 pierce:true, life:1.7, spread:0,
+                 blurb:'a lance — it runs straight and passes through' },
+  SEVER:       { id:'SEVER', name:'CUT', color:'#b5342a', speed:380, cool:0.26, n:1, dmg:3,
+                 pierce:false, life:0.42, spread:0,
+                 blurb:'a short cut — heavy, and it does not travel' },
+  POUR:        { id:'POUR', name:'FALL', color:'#2f6f8f', speed:420, cool:0.13, n:1, dmg:1,
+                 pierce:false, life:2.2, spread:0, grav:520,
+                 blurb:'it pours: the shot falls as it goes' },
+  BIND:        { id:'BIND', name:'SNARE', color:'#5f8f9f', speed:400, cool:0.3, n:1, dmg:1,
+                 pierce:false, life:1.5, spread:0, snare:true,
+                 blurb:'a bond — what it strikes is held fast for a moment' },
+  RAISE:       { id:'RAISE', name:'LIFT', color:'#c9a227', speed:440, cool:0.18, n:1, dmg:1,
+                 pierce:false, life:1.5, spread:0, lift:-260,
+                 blurb:'it throws what it strikes upward' },
+  LOWER:       { id:'LOWER', name:'SLAM', color:'#8f6fd9', speed:440, cool:0.18, n:1, dmg:1,
+                 pierce:false, life:1.5, spread:0, lift:300,
+                 blurb:'it drives what it strikes down' },
+  ASSIMILATE:  { id:'ASSIMILATE', name:'SPREAD', color:'#c96f2a', speed:360, cool:0.22, n:3, dmg:1,
+                 pierce:false, life:1.1, spread:150,
+                 blurb:'three at once, spreading — it takes the shape of the room' },
+  DISTINGUISH: { id:'DISTINGUISH', name:'WARD', color:'#8fb8c9', speed:470, cool:0.2, n:1, dmg:1,
+                 pierce:false, life:1.6, spread:0, guard:true,
+                 blurb:'it holds the line: a hit gives you a moment of guard' }
+};
+const BARE_GUN = { id:'BARE', name:'PLAIN SHOT', color:'#6f7b86', speed:460, cool:0.2, n:1,
+                   dmg:1, pierce:false, life:1.6, spread:0,
+                   blurb:'no letter held — an ordinary shot' };
+
+// A letter usually carries several primitives, and taking the first as
+// listed gave twelve letters the same shot and nobody the spread. Take
+// the most CHARACTERFUL one instead: a letter that severs is a cutting
+// weapon whatever else it does, and that is also the most useful thing
+// to know about it, since a severing shot is the only one that opens a
+// ward.
+const GUN_PRIORITY = ['SEVER', 'AXIS', 'BIND', 'ASSIMILATE', 'POUR', 'RAISE', 'LOWER', 'DISTINGUISH'];
+
+function gunOf(L) {
+  if (!L) return BARE_GUN;
+  for (const op of GUN_PRIORITY) {
+    if (L.primitives.indexOf(op) >= 0 && GUNS[op]) return GUNS[op];
+  }
+  return GUNS[L.primitives[0]] || BARE_GUN;
+}
+
+// ===================================================================
 // Update
 // ===================================================================
 function solidAtPx(px, py) { return isSolid(at(world, Math.floor(px / CELL), Math.floor(py / CELL))); }
@@ -528,6 +589,7 @@ function update(dt) {
   state.t += dt;
   if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 24);
   state.breath = Math.min(100, state.breath + 5.5 * dt);
+  if (state.comboT > 0) { state.comboT -= dt; if (state.comboT <= 0) state.combo = 0; }
 
   // ---- player ----
   const sp = 210;
@@ -563,21 +625,38 @@ function update(dt) {
 
   // ---- shooting ----
   if (keys[' '] && player.cool <= 0) {
-    player.cool = 0.16;
+    const g = gunOf(currentLetter());
+    player.cool = g.cool;
     state.shotsFired++;
-    shots.push({ x: player.x + player.face * 12, y: player.y, vx: player.face * 460, vy: 0, life: 1.6 });
+    for (let k = 0; k < g.n; k++) {
+      const spread = g.n > 1 ? (k - (g.n - 1) / 2) * g.spread : 0;
+      shots.push({ x: player.x + player.face * 12, y: player.y,
+                   vx: player.face * g.speed, vy: spread,
+                   life: g.life, kind: g.id, dmg: g.dmg, pierce: g.pierce,
+                   grav: g.grav || 0, color: g.color, hit: [] });
+    }
   }
   for (let i = shots.length - 1; i >= 0; i--) {
     const s = shots[i];
-    s.x += s.vx * dt; s.life -= dt;
+    if (s.grav) s.vy += s.grav * dt;
+    s.x += s.vx * dt; s.y += (s.vy || 0) * dt; s.life -= dt;
     if (s.life <= 0) { shots.splice(i, 1); continue; }
     // a shot hits a foe before it hits the wall behind it
     let hitFoe = false;
+    const g = GUNS[s.kind];
     for (const f of foes) {
+      if (s.hit && s.hit.indexOf(f) >= 0) continue;      // a lance hits each once
       if (Math.hypot(f.x - s.x, f.y - s.y) < f.r + 5) {
-        f.hp--; f.flash = 0.2;
+        f.hp -= (s.dmg || 1); f.flash = 0.2;
+        if (g && g.snare) { f.snared = 1.1; }
+        if (g && g.lift)  { f.vy = g.lift; f.y += g.lift > 0 ? 2 : -2; }
+        if (g && g.guard) { player.invuln = Math.max(player.invuln, 0.7); }
         burst(s.x, s.y, f.def.color);
-        shots.splice(i, 1); hitFoe = true; break;
+        if (f.hp <= 0) { state.combo++; state.comboT = 2.6;
+                         if (state.combo > state.bestCombo) state.bestCombo = state.combo; }
+        if (s.pierce) { s.hit.push(f); }
+        else { shots.splice(i, 1); hitFoe = true; }
+        break;
       }
     }
     if (hitFoe) continue;
@@ -589,11 +668,21 @@ function update(dt) {
       burst(s.x, s.y, PAL.stone);
       shots.splice(i, 1); continue;
     }
-    if (t === T.WARD || t === T.GATE) {
-      burst(s.x, s.y, PAL.ward);
-      HELP.say('a ward does not yield to shooting — only a severing letter opens it', 2.6);
+    if (t === T.WARD) {
+      // the gun keeps the letter's own rule: a SEVERING shot cuts a ward,
+      // and nothing else does. The same fact, in the action layer.
+      if (s.kind === 'SEVER') {
+        setAt(world, tx, ty, T.EMPTY);
+        remember({ x: tx, y: ty, from: T.WARD, to: T.EMPTY });
+        for (let k = 0; k < 8; k++) burst(s.x, s.y, PAL.ward);
+        HELP.say('the cut opens the ward', 2);
+      } else {
+        burst(s.x, s.y, PAL.ward);
+        HELP.say('a ward does not yield to this — load a severing letter', 2.4);
+      }
       shots.splice(i, 1); continue;
     }
+    if (t === T.GATE) { shots.splice(i, 1); continue; }
   }
 
   // ---- the enemies ----
@@ -802,9 +891,20 @@ function draw() {
     ctx.restore();
   }
 
-  // shots
-  ctx.fillStyle = PAL.ink;
-  for (const s of shots) ctx.fillRect(s.x - 5, s.y - 1.5, 10, 3);
+  // shots — each kind reads differently
+  for (const s of shots) {
+    ctx.fillStyle = s.color || PAL.ink;
+    if (s.kind === 'SEVER') {
+      ctx.fillRect(s.x - 9, s.y - 4, 18, 8);
+    } else if (s.kind === 'AXIS') {
+      ctx.fillRect(s.x - 11, s.y - 1, 22, 2);
+    } else if (s.kind === 'BIND') {
+      ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.stroke();
+    } else {
+      ctx.fillRect(s.x - 5, s.y - 1.5, 10, 3);
+    }
+  }
 
   // sparks
   for (const p of sparks) {
@@ -826,6 +926,10 @@ function draw() {
     ctx.font = Math.round(f.r * 1.15) + 'px "Times New Roman", serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(f.def.glyph, 0, 1);
+    if (f.snared > 0) {
+      ctx.strokeStyle = '#5f8f9f'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, f.r + 4, 0, Math.PI * 2); ctx.stroke();
+    }
     if (f.maxHp > 1) {
       ctx.fillStyle = 'rgba(0,0,0,.55)';
       ctx.fillRect(-f.r, -f.r - 6, f.r * 2, 3);
@@ -903,6 +1007,15 @@ function syncHUD() {
   }
   const fc = $('foeCount');
   if (fc) fc.textContent = foes.length ? foes.length + ' hunting' : '—';
+  const cb = $('combo');
+  if (cb) { cb.classList.toggle('show', state.combo > 1); $('comboN').textContent = state.combo; }
+  const gn = $('gunName');
+  if (gn) {
+    const g = gunOf(currentLetter());
+    gn.textContent = g.name;
+    gn.style.color = g.color;
+    $('gunBlurb').textContent = g.blurb;
+  }
 
   // the word being composed
   const wb = $('wordBar');
@@ -1077,6 +1190,21 @@ HELP.install({
           ['a sun letter', '<b>ASSIMILATE</b> — the target becomes what is beside it', '14'],
           ['a moon letter', '<b>DISTINGUISH</b> — ward it against all further change', '14']
         ] } },
+    { title: 'THE GUN IS THE LETTER YOU ARE HOLDING',
+      body: '<p>Your shot takes its character from the same primitive that gives the edit, so ' +
+            'there is nothing extra to learn — and the letter you carry matters every second, not ' +
+            'only when you stop to build. A shot is always free; only its character changes.</p>',
+      table: { head: ['the letter\u2019s primitive', 'the shot', 'what it does'],
+        rows: [
+          ['AXIS — an upright stroke', '<b>LANCE</b>', 'runs straight and passes THROUGH everything in the lane'],
+          ['SEVER — never joins forward', '<b>CUT</b>', 'short, heavy, three damage — <b>and it opens a ward</b>'],
+          ['POUR — a descending tail', '<b>FALL</b>', 'the shot falls as it travels; fires fast'],
+          ['BIND — a closed form', '<b>SNARE</b>', 'what it strikes is held fast for a moment'],
+          ['RAISE — dots above', '<b>LIFT</b>', 'throws what it strikes upward'],
+          ['LOWER — dots below', '<b>SLAM</b>', 'drives what it strikes down'],
+          ['ASSIMILATE — a sun letter', '<b>SPREAD</b>', 'three at once, fanning out'],
+          ['DISTINGUISH — a moon letter', '<b>WARD</b>', 'a hit gives you a moment of guard']
+        ] } },
     { title: 'WORDS — LETTERS IN SEQUENCE',
       body: '<p>A single letter is one tool. <b>A word is a program.</b> Press <b>C</b> to add the ' +
             'letter you are holding to a word, up to four, then <b>Enter</b> to write it. Each letter ' +
@@ -1120,6 +1248,7 @@ window.LS = {
   get state(){ return state; }, get world(){ return world; }, get player(){ return player; },
   get tiles(){ return tiles; }, get LETTERS(){ return LETTERS; }, get keys(){ return keys; },
   get foes(){ return foes; }, spawnFoe: spawnFoe, FOE_KINDS: FOE_KINDS,
+  get shots(){ return shots; }, GUNS: GUNS, gunOf: gunOf,
   loadChamber: loadChamber, planAt: planAt, commitEdit: commitEdit, frame: frame,
   compose: (gl) => { const L = BY_GLYPH[gl]; if (L) { state.composing = true; state.word.push(L); } },
   start: start, CHAMBERS: CHAMBERS, showLetter: showLetter,

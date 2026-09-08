@@ -65,6 +65,20 @@ Nothing was assigned by taste — every power is derived from a fact anyone can 
 grammar. A letter's **abjad value is what its edit costs**, so the economy is the tradition's
 own arithmetic too.
 
+## The gun is the letter you are holding
+
+Your shot takes its character from the same primitive that gives the edit, so the letter you
+carry matters every second — not only when you stop to build. A shot is always free; only its
+character changes.
+
+| primitive | shot | |
+|---|---|---|
+| SEVER | **CUT** | short, heavy — **and the only shot that opens a ward** |
+| BIND | **SNARE** | holds what it strikes |
+| POUR | **FALL** | the shot falls as it travels |
+| ASSIMILATE | **SPREAD** | three at once |
+| AXIS | **LANCE** | passes through everything in the lane |
+
 ## Words
 
 A single letter is one tool. A word is a program. Press `C` to add the letter you hold to a

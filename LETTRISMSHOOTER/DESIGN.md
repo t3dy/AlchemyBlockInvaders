@@ -145,6 +145,45 @@ were checked with a depth-2 search under a budget; chamber 6 was checked by enum
 ordered triple of its letters as a word.
 
 
+
+## The gun is the letter you are holding
+
+The letters were the editor and the gun was a separate, dumb thing — two systems that never
+spoke, which is part of why the first build played as a puzzle game. Now **the letter you hold
+is also the shot you fire**, so the choice matters every second rather than only when you stop
+to build. The character comes from the same primitive that gives the edit, so there is nothing
+extra to learn.
+
+| the primitive | the shot | what it does | letters |
+|---|---|---|---|
+| SEVER | **CUT** | short, heavy, three damage — **and it opens a ward** | 6 |
+| BIND | **SNARE** | what it strikes is held fast for a moment | 8 |
+| POUR | **FALL** | the shot falls as it travels; fires fastest | 6 |
+| ASSIMILATE | **SPREAD** | three at once, fanning out | 5 |
+| AXIS | **LANCE** | runs straight and passes **through** everything in the lane | 1 |
+| LOWER | **SLAM** | drives what it strikes down | 1 |
+| DISTINGUISH | **WARD** | a hit gives you a moment of guard | 1 |
+
+**A shot is always free.** Only its character changes — an action game needs an unconditional
+basic attack, and the abjad price stays where it belongs, on the edits.
+
+**The gun keeps the letter's own rule.** A severing shot opens warded stone and no other shot
+does, exactly as the severing *edit* does. The same fact, now in the action layer: the six
+letters that break a word are the six that get you through a boundary, whether you write them
+or fire them.
+
+### Taking the most characterful primitive, not the first
+
+A letter usually carries several primitives, and taking `primitives[0]` gave **twelve letters
+the same shot** and nobody the spread. The gun is now chosen by a priority — SEVER, AXIS, BIND,
+ASSIMILATE, POUR, RAISE, LOWER, DISTINGUISH — so a letter that severs is a cutting weapon
+whatever else it does. That is both the better spread and the more useful thing to know about
+a letter, since a severing shot is the only one that opens a ward.
+
+**Verified:** all 28 letters map to a gun; the lance pierces three foes in one pass while a
+plain shot stops at the first; a bond holds a foe fast; a three-kill chain registers; and only
+the cutting shot opens a ward — the snare and the lance leave it standing.
+
 ## Words — letters in sequence
 
 A single letter is one tool. **A word is a program**, and this is what makes the alphabet an
@@ -240,6 +279,8 @@ stands, which keeps a long chamber from punishing you twice.
 ## Known limits
 
 - **Three enemy kinds, no boss.** Enough for pressure; not enough for a fight with a shape.
+- **The chain counter rewards nothing yet.** It counts and it displays; it does not feed score,
+  breath or anything else. It should.
 - **Seven chambers.** ASSIMILATE and DISTINGUISH still have no chamber of their own.
 - **The bot's platforming is crude**, so the end-to-end playthrough proves the mechanics and
   the gate rather than a clean human run.

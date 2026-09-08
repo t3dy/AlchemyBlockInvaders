@@ -70,6 +70,21 @@ were not. What changed:
   and the scribe's walls are ordinary stone, which a shot opens. Neither can make a room
   unwinnable.
 
+## 2026-09-08 (later) — the gun is the letter
+
+- **Your shot takes its character from the letter you hold.** The letters were the editor and
+  the gun was a separate dumb thing; unifying them is what makes the loaded letter matter every
+  second instead of only when you stop to build. Nothing extra to learn — the shot comes from
+  the same primitive as the edit.
+- **A shot is always free.** An action game needs an unconditional basic attack. The abjad
+  price stays on the edits, where it means something.
+- **The gun keeps the letter's rule:** a severing shot opens a ward and no other shot does,
+  exactly as the severing edit does.
+- **Pick the most characterful primitive, not the first.** `primitives[0]` gave twelve letters
+  the same shot and nobody the spread. Priority order now, with SEVER first.
+- **A chain counter**, so skill has somewhere to show. It does not yet pay for anything, and
+  that is written down as a limit rather than left implied.
+
 ## Open questions for Ted
 
 - **Should the traditions' own attributions be shown beside the form-derived ones?** TurkaGame's
