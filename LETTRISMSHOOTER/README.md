@@ -26,6 +26,9 @@ chasm cannot be shot across, a ledge cannot be shot up to. You have to edit the 
 | mouse | aim the edit cursor; the ghost shows exactly what will happen |
 | click / `F` | **commit the edit** |
 | `1`–`9` | choose a letter you are carrying |
+| `C` | **add it to a word** |
+| `Enter` | write the word |
+| `Backspace` | unmake the word |
 | `Q` `E` | cycle letters |
 | `Tab` | the codex of all twenty-eight |
 | `R` | restart the chamber |
@@ -47,6 +50,26 @@ chasm cannot be shot across, a ledge cannot be shot up to. You have to edit the 
 Nothing was assigned by taste — every power is derived from a fact anyone can check against a
 grammar. A letter's **abjad value is what its edit costs**, so the economy is the tradition's
 own arithmetic too.
+
+## Words
+
+A single letter is one tool. A word is a program. Press `C` to add the letter you hold to a
+word, up to four, then `Enter` to write it — each letter fires one cell further left, as Arabic
+is written.
+
+**And the orthography is the control flow.** Six letters — ا د ذ ر ز و — never join what
+follows, so a word *breaks* at one of them: everything up to it runs and the rest is lost.
+That is simply why a written Arabic word looks like several pieces on the page.
+
+| | | |
+|---|---|---|
+| **باب** | *bāb*, door | breaks after the alif, as the written word does |
+| **درب** | *darb*, path | breaks after the dāl, immediately |
+| **قمر** | *qamar*, moon | every letter joins — it runs whole |
+| **جبل** | *jabal*, mountain | runs whole |
+
+A word that runs whole is **well-formed** and costs a third less. Put alif anywhere but last
+and you will lose the rest of what you wrote.
 
 ## Provenance
 

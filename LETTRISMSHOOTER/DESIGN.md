@@ -69,7 +69,7 @@ compressed logarithmically above 10 so the thousand-letters are expensive rather
 
 ## The chambers
 
-Five, each teaching one primitive, the last combining them.
+Seven, each teaching one thing, the last combining them.
 
 | # | name | teaches | the problem |
 |---|---|---|---|
@@ -77,7 +77,9 @@ Five, each teaching one primitive, the last combining them.
 | 2 | THE CHASM | BIND | a gap too wide to cross |
 | 3 | THE WARD | SEVER | warded stone that shooting cannot touch |
 | 4 | THE FLOOR | POUR / LOWER | the way on is beneath you |
-| 5 | THE WHOLE ART | everything | a ward, a chasm and a ledge, no instruction |
+| 5 | THE TERRACE | RAISE | a floor you cannot climb — lift it instead of building on it |
+| 6 | THE WRITTEN WORD | words | five cells of fire; one letter clears one cell |
+| 7 | THE WHOLE ART | everything | a ward, a chasm and a ledge, no instruction |
 
 **A teaching chamber carries only the letter it teaches.** The first draft put alif in every
 room for convenience and alif quietly solved three of them, which destroyed the lesson. The
@@ -135,31 +137,81 @@ window.__d1 = function (i) {
 [0,1,2,3].map(__d1)      // chamber 5 needs a budgeted depth-2; see below
 ```
 
-**Last run, 2026-09-07:**
-
-| chamber | teaches | solved by |
-|---|---|---|
-| 1 THE UPRIGHT | AXIS | `ا AXIS` only, 4 placements |
-| 2 THE CHASM | BIND | `م BIND` only, 27 placements |
-| 3 THE WARD | SEVER | `ر SEVER` only, 2 placements |
-| 4 THE FLOOR | POUR | `ج LOWER` 24 and `ج POUR` 16 — both are jīm's own features (dots below, a tail), so both are legitimate |
-| 5 THE WHOLE ART | all | solvable in 2 edits (`ا AXIS` ×2, going *over* the ward rather than through it) |
+The last run is recorded under *Seven chambers* below.
 
 **Do not run this unbounded at depth 3.** It is ~10¹⁰ operations on one thread and it wedges
-the tab so completely that even navigating away times out. Chamber 5 was checked with a
-depth-2 search under a 12-second budget.
+the tab so completely that even navigating away times out. Chambers needing more than one edit
+were checked with a depth-2 search under a budget; chamber 6 was checked by enumerating every
+ordered triple of its letters as a word.
+
+
+## Words — letters in sequence
+
+A single letter is one tool. **A word is a program**, and this is what makes the alphabet an
+instruction set rather than a toolbar.
+
+`C` adds the held letter to a word, up to four; `Enter` writes it. Each letter fires in turn,
+one cell further **left** each time, because that is the direction Arabic is written. Each step
+sees the world the previous step left, so a word composes.
+
+### The orthography is the control flow
+
+Six letters — **ا د ذ ر ز و** — never join what follows. A word **breaks** at such a letter:
+everything up to and including it runs, and the rest is lost. This is not invented for the
+game; it is why a written Arabic word looks like several pieces on the page.
+
+| word | | breaks |
+|---|---|---|
+| **باب** | *bāb*, door | after the alif, exactly as the written word does |
+| **درب** | *darb*, path | after the dāl, immediately — almost nothing runs |
+| **نور** | *nūr*, light | after the wāw |
+| **قمر** | *qamar*, moon | never — every letter joins, it runs whole |
+| **جبل** | *jabal*, mountain | never |
+
+**A word that runs whole is well-formed and costs a third less.** That is the only reward for
+vocabulary and it is a real one: a player who knows how a word is written knows *before writing
+it* how much of it will run. The lesson in play is sharper still — put alif anywhere but last
+and you lose the rest of the word.
+
+The preview draws it: the letters that will run are outlined in gold with their glyph, the ones
+that will be lost are dashed in red.
+
+Twelve ordinary words are recognised and their meanings shown. **No magical claim is made for
+any of them** — they are vocabulary, and showing what they mean keeps the alphabet legible.
+
+## Seven chambers
+
+| # | name | teaches | verified |
+|---|---|---|---|
+| 1 | THE UPRIGHT | AXIS | `ا AXIS` only, 4 placements |
+| 2 | THE CHASM | BIND | `م BIND` only, 27 placements |
+| 3 | THE WARD | SEVER | `ر SEVER` only, 2 placements |
+| 4 | THE FLOOR | POUR | `ج LOWER` 24 and `ج POUR` 16 — both jīm's own features |
+| 5 | THE TERRACE | RAISE | needs **two** lifts; the tool repeats |
+| 6 | THE WRITTEN WORD | words | **0 single-letter solutions, 42 word solutions** |
+| 7 | THE WHOLE ART | everything | solvable in 2 edits |
+
+Chamber 6 is the one that had to be forced. Three earlier drafts were solvable by a single
+letter, which defeated the point:
+
+- a five-cell field of fire is too wide for any one edit to clear;
+- **SEVER no longer cascades through a hazard.** A cut runs along the grain of a *body* — but
+  fire has no grain, and while it did cascade, one alif opened the whole field and did a word's
+  work.
 
 ## Known limits
 
 - **No enemies yet.** The shooter half is currently only the gun and the terrain; the tension
   comes from hazards and from falling. Enemies that damage the world, or that repair it behind
   you, are the obvious next thing and would make the editor matter under pressure.
-- **Five chambers.** Enough to teach the eight primitives, not enough to exhaust them —
-  RAISE, ASSIMILATE and DISTINGUISH have no chamber of their own.
+- **Seven chambers.** ASSIMILATE and DISTINGUISH still have no chamber of their own.
 - **The bot's platforming is crude**, so the end-to-end playthrough proves the mechanics and
   the gate rather than a clean human run.
-- **Twenty-eight letters, five in play.** The codex shows all of them; the chambers hand out
-  ا م ر ج ب.
+- **Twenty-eight letters, six in play.** The codex shows all of them; the chambers hand out
+  ا م ر ج ب ن.
+- **Words are at most four letters** and act along one row. A word cannot build a staircase,
+  which is a real constraint on what puzzles they can express — chamber 6 had to be redesigned
+  around a horizontal problem once that became clear.
 - **No Ottoman/medieval register split yet.** TurkaGame's brief asks for attributions to be
   marked by period and tradition; this project shows the form-derived facts only, which are
   period-neutral, and does not yet show the traditions' own attributions beside them.

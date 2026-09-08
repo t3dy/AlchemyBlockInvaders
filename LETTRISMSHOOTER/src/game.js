@@ -31,6 +31,8 @@ const state = {
   sel: 0,                 // which held letter is selected
   cursor: { x: 0, y: 0 },
   lastPlan: null,
+  word: [],               // the letters composed into a word
+  composing: false,
   editsMade: 0, shotsFired: 0, deaths: 0
 };
 
@@ -122,6 +124,44 @@ const CHAMBERS = [
     ]
   },
   {
+    name: 'THE TERRACE',
+    teaches: 'RAISE',
+    brief: 'The gate stands above a floor you cannot climb. Nūn carries a dot above, and a dot above lifts: it raises the ground itself rather than building on it. Aim at the floor, not at the air.',
+    letters: ['ن'],
+    map: [
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..................G.......',
+      '..........................',
+      '..........................',
+      '@.........................',
+      '#####.....................',
+      '#####...........##########',
+      '##########################'
+    ]
+  },
+  {
+    name: 'THE WRITTEN WORD',
+    teaches: 'words',
+    brief: 'Three cells of fire across the only path, and one letter clears one cell. A word runs several letters at once, each one cell further LEFT, as Arabic is written — so compose three that can pour. But a word BREAKS at any letter that never joins what follows: put alif anywhere but last and you will lose the rest of it.',
+    letters: ['ج', 'ن', 'م', 'ا'],
+    map: [
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '@........^^^^^......G.....',
+      '##########################',
+      '##########################',
+      '##########################'
+    ]
+  },
+  {
     name: 'THE WHOLE ART',
     teaches: 'all of them',
     brief: 'No instruction this time. A ward, a chasm and a ledge, and every letter you have been taught. Work out the order.',
@@ -176,6 +216,7 @@ function loadChamber(i) {
   });
 
   state.held = []; state.sel = 0; state.breath = 100;
+  state.word = []; state.composing = false;
   state.over = false; state.won = false; state.running = true;
   camX = 0;
   syncHeld();
@@ -198,8 +239,11 @@ function currentLetter() { return state.held[state.sel] || null; }
 // that actually applies at the cursor, so a letter is not one tool but
 // a small set, and which one fires is a fact about where you point it.
 function planAt(cx, cy) {
+  if (!world) return null;
+  // a composed word is planned as a whole; it overrides the single letter
+  if (state.composing && state.word.length) return planWord(world, state.word, cx, cy);
   const L = currentLetter();
-  if (!L || !world) return null;
+  if (!L) return null;
   for (const op of L.primitives) {
     const p = planEdit(world, L, op, cx, cy);
     if (p.ok) return p;
@@ -209,9 +253,33 @@ function planAt(cx, cy) {
 }
 
 function commitEdit() {
+  const c = cursorCell();
+
+  // ---- a composed word ----
+  if (state.composing && state.word.length) {
+    const plan = planWord(world, state.word, c.x, c.y);
+    if (!plan.ok) { HELP.say(plan.why, 3); return; }
+    if (state.breath < plan.cost) {
+      HELP.say('not enough breath — “' + plan.spelling + '” costs ' + plan.cost +
+               ' (the sum of its letters), you have ' + Math.floor(state.breath), 3.6);
+      return;
+    }
+    state.breath -= plan.cost;
+    for (const ch of plan.changes) { setAt(world, ch.x, ch.y, ch.to); burst(ch.x*CELL+CELL/2, ch.y*CELL+CELL/2, PAL.gold); }
+    state.editsMade++;
+    state.shake = 7;
+    HELP.say('<b>' + plan.spelling + '</b> — ' + plan.why, 5);
+    if (plan.whole && plan.meaning) {
+      state.wordsWhole = (state.wordsWhole || 0) + 1;
+      HELP.say('a well-formed word costs a third less. <b>' + plan.spelling + '</b>: ' + plan.meaning, 4.5);
+    }
+    state.word = []; state.composing = false;
+    syncHeld();
+    return;
+  }
+
   const L = currentLetter();
   if (!L) { HELP.say('you are carrying no letters', 2); return; }
-  const c = cursorCell();
   const plan = planAt(c.x, c.y);
   if (!plan || !plan.ok) {
     HELP.say('<b>' + L.glyph + '</b> ' + (plan ? plan.why : 'nothing here'), 3);
@@ -262,7 +330,24 @@ window.addEventListener('keydown', function (e) {
   if (n >= 1 && n <= 9 && state.held[n - 1]) { state.sel = n - 1; syncHeld(); return; }
   if (k === 'q') { state.sel = (state.sel + state.held.length - 1) % Math.max(1, state.held.length); syncHeld(); }
   if (k === 'e') { state.sel = (state.sel + 1) % Math.max(1, state.held.length); syncHeld(); }
-  if (k === 'f') { commitEdit(); }
+  if (k === 'f' || k === 'enter') { commitEdit(); }
+  if (k === 'c') {                       // compose: add the selected letter
+    const L = currentLetter();
+    if (!L) { HELP.say('nothing to compose with', 2); }
+    else if (state.word.length >= 4) { HELP.say('four letters is as long as a word may be here', 2.4); }
+    else {
+      state.composing = true;
+      state.word.push(L);
+      const sp = state.word.map(x => x.glyph).join('');
+      HELP.say('composing <b>' + sp + '</b>' + (WORDS[sp] ? ' — ' + WORDS[sp] : '') +
+               ' · <b>Enter</b> to write it, <b>Backspace</b> to unmake', 4);
+      syncHeld();
+    }
+  }
+  if (k === 'backspace') {
+    if (state.word.length) { state.word.pop(); if (!state.word.length) state.composing = false; syncHeld(); }
+    e.preventDefault();
+  }
   if (k === 'r') { loadChamber(state.chamber); }
   if (k === 'p') { state.paused = !state.paused; }
   if (['arrowleft','arrowright','arrowup','arrowdown'].indexOf(k) >= 0) e.preventDefault();
@@ -490,6 +575,23 @@ function draw() {
   const cc = cursorCell();
   if (plan) {
     ctx.save();
+    // a word shows where it breaks: what runs, and what is lost
+    if (plan.steps) {
+      for (const st of plan.steps) {
+        const [sx2, sy2] = st.at;
+        ctx.globalAlpha = 0.85;
+        ctx.strokeStyle = st.ran ? PAL.gold : '#b5342a';
+        ctx.setLineDash(st.ran ? [] : [3, 3]);
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(sx2 * CELL + 2.5, sy2 * CELL + 2.5, CELL - 5, CELL - 5);
+        ctx.setLineDash([]);
+        ctx.fillStyle = st.ran ? PAL.gold : '#b5342a';
+        ctx.font = Math.round(CELL * 0.42) + 'px "Times New Roman", serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(st.letter.glyph, sx2 * CELL + CELL / 2, sy2 * CELL + CELL / 2);
+        ctx.globalAlpha = 1;
+      }
+    }
     if (plan.ok) {
       ctx.globalAlpha = 0.42 + Math.sin(state.t * 6) * 0.12;
       for (const ch of plan.changes) {
@@ -595,6 +697,22 @@ function syncHeld() {
 }
 
 function syncHUD() {
+  // the word being composed
+  const wb = $('wordBar');
+  if (state.composing && state.word.length) {
+    const sp = state.word.map(x => x.glyph).join('');
+    const plan = world ? planWord(world, state.word, cursorCell().x, cursorCell().y) : null;
+    wb.classList.add('show');
+    wb.classList.toggle('whole', !!(plan && plan.whole));
+    $('wbWord').textContent = sp;
+    $('wbMean').textContent = WORDS[sp] ? '“' + WORDS[sp] + '”' : 'not a word — but it will still run';
+    $('wbCost').textContent = plan ? (plan.cost + ' breath' + (plan.whole ? '  (a third off: well-formed)' : '')) : '';
+    $('wbBreak').innerHTML = plan
+      ? (plan.whole ? 'every letter joins — it runs whole'
+                    : 'breaks at <b>' + state.word[plan.breakAt].glyph + '</b>, which never joins what follows')
+      : '';
+  } else wb.classList.remove('show');
+
   $('breathFill').style.width = state.breath + '%';
   $('breathN').textContent = Math.floor(state.breath);
   $('chamberN').textContent = (state.chamber + 1) + '/' + CHAMBERS.length;
@@ -724,6 +842,9 @@ HELP.install({
     ['mouse', 'aim the edit cursor'],
     ['click / F', 'COMMIT THE EDIT'],
     ['1 – 9', 'choose a letter'],
+    ['C', 'ADD TO A WORD'],
+    ['Enter', 'write the word'],
+    ['Backspace', 'unmake it'],
     ['Q  E', 'cycle letters'],
     ['Tab', 'the codex of all 28'],
     ['R', 'restart the chamber'],
@@ -749,6 +870,22 @@ HELP.install({
           ['a sun letter', '<b>ASSIMILATE</b> — the target becomes what is beside it', '14'],
           ['a moon letter', '<b>DISTINGUISH</b> — ward it against all further change', '14']
         ] } },
+    { title: 'WORDS — LETTERS IN SEQUENCE',
+      body: '<p>A single letter is one tool. <b>A word is a program.</b> Press <b>C</b> to add the ' +
+            'letter you are holding to a word, up to four, then <b>Enter</b> to write it. Each letter ' +
+            'fires in turn, one cell further LEFT each time, because that is the direction Arabic is ' +
+            'written.</p>' +
+            '<div class="note"><b>And the orthography is the control flow.</b> Six letters — ' +
+            '<b>ا د ذ ر ز و</b> — never join what follows. A word BREAKS at such a letter: everything ' +
+            'up to and including it runs, and the rest is lost. This is not invented; it is why a ' +
+            'written Arabic word looks like several pieces on the page.<br><br>' +
+            '<b>باب</b> <i>bāb</i>, door — breaks after the alif, exactly as the written word does.<br>' +
+            '<b>درب</b> <i>darb</i>, path — breaks after the dāl, immediately.<br>' +
+            '<b>قمر</b> <i>qamar</i>, moon — every letter joins. It runs whole.<br>' +
+            '<b>جبل</b> <i>jabal</i>, mountain — runs whole.</div>' +
+            '<p>A word that runs whole is <b>well-formed</b> and costs a third less. That is the only ' +
+            'reward for vocabulary, and it is a real one: a player who knows how a word is written ' +
+            'knows before writing it how much of it will run.</p>' },
     { title: 'THE ABJAD IS THE PRICE',
       body: '<p>Every letter has a numerical value in the abjad reckoning, and that value is what its ' +
             'edit costs from your breath. Alif is 1 and nearly free. The thousand-letter is ruinous. ' +
@@ -776,6 +913,7 @@ window.LS = {
   get state(){ return state; }, get world(){ return world; }, get player(){ return player; },
   get tiles(){ return tiles; }, get LETTERS(){ return LETTERS; }, get keys(){ return keys; },
   loadChamber: loadChamber, planAt: planAt, commitEdit: commitEdit, frame: frame,
+  compose: (gl) => { const L = BY_GLYPH[gl]; if (L) { state.composing = true; state.word.push(L); } },
   start: start, CHAMBERS: CHAMBERS, showLetter: showLetter,
   get BY_GLYPH(){ return BY_GLYPH; }
 };

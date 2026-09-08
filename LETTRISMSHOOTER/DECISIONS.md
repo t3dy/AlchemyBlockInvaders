@@ -29,6 +29,23 @@
   and the fall; enemies are the next increment and are recorded as a known limit rather than
   half-built.
 
+## 2026-09-08 — words
+
+- **Built the word system**, which was the first open question below and is the idea that makes
+  this a programming language rather than eight tools. Letters compose, execute right to left,
+  and **break at a non-joining letter** exactly as the written word does.
+- **A well-formed word costs a third less.** The only reward for vocabulary, and it makes
+  knowing the orthography worth something mechanically rather than decoratively.
+- **Twelve ordinary words recognised, with meanings shown, and no magical claim made for any.**
+  They are vocabulary; the game says so.
+- **A word acts along one row.** It cannot build a staircase. This is a real constraint and it
+  forced chamber 6 to be redesigned around a horizontal problem (a field of fire) rather than a
+  vertical one.
+- **SEVER no longer cascades through a hazard.** A cut runs along the grain of a body; fire has
+  no grain. While it did, one letter cleared a whole field and no word was ever needed.
+- **Two new chambers**: THE TERRACE for RAISE, which had no chamber, and THE WRITTEN WORD, which
+  is verified to have *no* single-letter solution.
+
 ## Open questions for Ted
 
 - **Should the traditions' own attributions be shown beside the form-derived ones?** TurkaGame's
@@ -38,6 +55,9 @@
   shows only the period-neutral facts of form and grammar.
 - **Should letters be spendable-and-lost, or permanent once collected?** Currently permanent,
   paid for from a regenerating breath. Consumable tiles would make routing a resource puzzle.
-- **Should a word be buildable?** Placing several letters in sequence to make an actual word,
-  with the non-joining rule fracturing it, is the obvious deepening and is what the TurkaGame
-  brief means by "letters as instructions" rather than as single tools.
+- **Should a word be able to act vertically?** It currently writes along one row. Letting a
+  word descend, or follow the cursor's drag, would let words express climbing puzzles — but
+  writing is horizontal, so there is a fidelity cost to be weighed.
+- **Should the abjad SUM of a word matter?** Gematria is the obvious next layer: a word whose
+  total equals another word's total might do that word's work. It is well attested and it would
+  make the arithmetic worth learning, but it needs sources rather than invention.

@@ -167,10 +167,14 @@ function opSEVER(w, x, y) {
   const cur = at(w, x, y);
   if (cur === T.EMPTY) return { ok: false, changes: [], why: 'nothing here to cut' };
   const changes = [{ x: x, y: y, to: T.EMPTY, from: cur }];
-  // a cut runs a little along the grain, as a fracture does
-  for (const d of [-1, 1]) {
-    const n = at(w, x + d, y);
-    if (n === cur && cur !== T.WARD) changes.push({ x: x + d, y: y, to: T.EMPTY, from: n });
+  // A cut runs a little along the grain, as a fracture does — but only
+  // through a BODY. Fire has no grain, so a single cut through a field of
+  // it opened the whole field, which let one letter do a word's work.
+  if (cur === T.STONE || cur === T.GLASS) {
+    for (const d of [-1, 1]) {
+      const n = at(w, x + d, y);
+      if (n === cur) changes.push({ x: x + d, y: y, to: T.EMPTY, from: n });
+    }
   }
   return { ok: true, changes: changes,
            why: cur === T.WARD ? 'the ward breaks — only a severing letter does this'
@@ -258,4 +262,108 @@ if (typeof window !== 'undefined') {
     T, TILE_NAME, isSolid, makeWorld, at, setAt,
     OPS, OP_INFO, planEdit, applyEdit, costOf
   });
+}
+
+// ===================================================================
+// WORDS — letters in sequence, as a compound instruction
+//
+// This is what makes the alphabet a programming language rather than
+// eight separate tools. You compose two to four letters into a word;
+// each letter's edit fires in turn, one cell further LEFT each time,
+// because that is the direction Arabic is written.
+//
+// And the orthography is the control flow. Six letters — ا د ذ ر ز و —
+// never join what follows, which is simply why a written Arabic word
+// looks like several pieces on the page. Here a word BREAKS at such a
+// letter: everything up to and including it executes, and the rest is
+// lost. So a player who knows how a word is written knows in advance
+// how much of it will run.
+//
+//   باب  bab, door     — breaks after the alif, as the written word does
+//   درب  darb, path    — breaks after the dal, immediately
+//   قمر  qamar, moon   — every letter joins: it runs whole
+//   جبل  jabal, mount  — runs whole
+//
+// A word that runs whole is WELL-FORMED and costs a third less. That is
+// the only reward for vocabulary, and it is a real one.
+// ===================================================================
+
+// Ordinary vocabulary, spelled from the twenty-eight basic letters.
+// No magical claim is made for any of these; they are words, and the
+// game shows what they mean so the alphabet stays legible.
+const WORDS = {
+  'باب': 'door, gate',
+  'نور': 'light',
+  'نار': 'fire',
+  'بحر': 'sea',
+  'جبل': 'mountain',
+  'حجر': 'stone',
+  'سور': 'wall',
+  'درب': 'path',
+  'برج': 'tower',
+  'رمل': 'sand',
+  'قمر': 'moon',
+  'شمس': 'sun'
+};
+
+// Plan a whole word at a target. Returns the same shape as a single
+// edit, plus `steps` so the preview can colour what runs and what is lost.
+function planWord(world, letters, x, y) {
+  if (!letters.length) return { ok: false, changes: [], steps: [], why: 'no letters composed' };
+
+  const spelling = letters.map(L => L.glyph).join('');
+  const meaning = WORDS[spelling] || null;
+
+  // where does the writing break?
+  let breakAt = -1;
+  for (let i = 0; i < letters.length - 1; i++) {
+    if (letters[i].facts.non_connecting) { breakAt = i; break; }
+  }
+  const runs = breakAt < 0 ? letters.length : breakAt + 1;
+  const whole = breakAt < 0;
+
+  // execute right to left, on a scratch copy so each step sees the last
+  const scratch = { cols: world.cols, rows: world.rows, g: world.g.slice() };
+  const changes = [], steps = [];
+  for (let i = 0; i < letters.length; i++) {
+    const L = letters[i];
+    const tx = x - i;                       // Arabic is written right to left
+    if (i >= runs) {
+      steps.push({ letter: L, at: [tx, y], ran: false, why: 'lost — the word broke before this' });
+      continue;
+    }
+    let done = null;
+    for (const op of L.primitives) {
+      const p = planEdit(scratch, L, op, tx, y);
+      if (p.ok) { done = p; break; }
+    }
+    if (done) {
+      for (const c of done.changes) { setAt(scratch, c.x, c.y, c.to); changes.push(c); }
+      steps.push({ letter: L, at: [tx, y], ran: true, op: done.op, why: done.why });
+    } else {
+      steps.push({ letter: L, at: [tx, y], ran: false, why: 'nothing for it to act on here' });
+    }
+  }
+
+  const raw = letters.reduce((a, L) => a + costOf(L), 0);
+  const cost = whole ? Math.round(raw * 0.66) : raw;
+
+  let why;
+  const acted = steps.filter(s => s.ran).length;
+  if (!changes.length) why = 'the word finds nothing to act on here';
+  else if (whole) why = (meaning
+      ? 'well-formed — “' + spelling + '”, ' + meaning + ' — every letter joins, so none of it is lost'
+      : 'every letter joins, so none of the word is lost')
+      + (acted < letters.length ? ' (' + acted + ' of ' + letters.length + ' found something to act on)' : '');
+  else why = 'the word breaks at ' + letters[breakAt].glyph + ' — ' + (letters.length - runs) +
+             ' of ' + letters.length + ' lost, because that letter never joins what follows';
+
+  return { ok: changes.length > 0, changes: changes, steps: steps, why: why,
+           spelling: spelling, meaning: meaning, whole: whole, breakAt: breakAt,
+           cost: cost, rawCost: raw, op: 'WORD' };
+}
+
+if (typeof window !== 'undefined') {
+  window.WORDS = WORDS;
+  window.planWord = planWord;
 }
