@@ -16,6 +16,20 @@ looks like several pieces on the page — **cut**, and are the only thing that o
 You cannot shoot your way to the gate. Ordinary stone yields to a shot; a ward does not, a
 chasm cannot be shot across, a ledge cannot be shot up to. You have to edit the world.
 
+## What comes for you
+
+An editor is only interesting under pressure, and two of the three things hunting you fight the
+*editor* rather than you:
+
+| | | |
+|---|---|---|
+| **ḤĀRIS** ح | the guard | runs you down. Shoot it. |
+| **MĀḤĪ** م | the eraser | hunts what you have written and **unmakes it**. It draws a line to what it is coming for. |
+| **KĀTIB** ك | the scribe | keeps its distance and writes walls across your path. |
+
+So every edit is a bet on time: cut a ward and the eraser will restore it in seconds unless you
+work faster than it, or stop and kill it.
+
 ## Controls
 
 | | |

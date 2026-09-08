@@ -33,7 +33,9 @@ const state = {
   lastPlan: null,
   word: [],               // the letters composed into a word
   composing: false,
-  editsMade: 0, shotsFired: 0, deaths: 0
+  editsMade: 0, shotsFired: 0, deaths: 0, kills: 0,
+  hp: 3, maxHp: 3, spawnT: 0, undone: 0,
+  recent: []              // the edits you have made, so the eraser can hunt them
 };
 
 let LETTERS = [], BY_GLYPH = {};
@@ -50,7 +52,8 @@ const CHAMBERS = [
   {
     name: 'THE UPRIGHT',
     teaches: 'AXIS',
-    brief: 'The gate sits on a ledge you cannot jump to. Alif is a single upright stroke, and an upright stroke stands: it raises a pillar two cells high — exactly your jump. Place one, climb it, place another.',
+    foes: ['haris'],
+    brief: 'Something is already in here with you. The gate sits on a ledge you cannot jump to. Alif is a single upright stroke, and an upright stroke stands: it raises a pillar two cells high — exactly your jump. Place one, climb it, place another.',
     letters: ['ا'],
     map: [
       '..........................',
@@ -69,6 +72,7 @@ const CHAMBERS = [
   {
     name: 'THE CHASM',
     teaches: 'BIND',
+    foes: ['haris', 'haris', 'katib'],
     brief: 'A gap in the floor. A closed loop binds what stands on either side into one body — aim into the gap, level with the two edges, and it becomes a bridge.',
     letters: ['م'],
     map: [
@@ -88,7 +92,8 @@ const CHAMBERS = [
   {
     name: 'THE WARD',
     teaches: 'SEVER',
-    brief: 'Warded stone, and nothing you can shoot will open it. Six letters never join what follows — which is why an Arabic word looks like several pieces on the page — and those, and only those, cut a ward.',
+    foes: ['haris', 'mahi'],
+    brief: 'Warded stone, and nothing you can shoot will open it. And a MĀḤĪ is loose: it hunts what you write and unmakes it, so cut fast or kill it first. Six letters never join what follows — which is why an Arabic word looks like several pieces on the page — and those, and only those, cut a ward.',
     letters: ['ر'],
     map: [
       '..........................',
@@ -107,6 +112,7 @@ const CHAMBERS = [
   {
     name: 'THE FLOOR',
     teaches: 'POUR',
+    foes: ['katib', 'haris'],
     brief: 'The way on is beneath you. A descending tail lets what is above pass down through: it opens a channel in solid matter, and you fall through it.',
     letters: ['ج'],
     map: [
@@ -126,6 +132,7 @@ const CHAMBERS = [
   {
     name: 'THE TERRACE',
     teaches: 'RAISE',
+    foes: ['mahi', 'haris'],
     brief: 'The gate stands above a floor you cannot climb. Nūn carries a dot above, and a dot above lifts: it raises the ground itself rather than building on it. Aim at the floor, not at the air.',
     letters: ['ن'],
     map: [
@@ -145,6 +152,7 @@ const CHAMBERS = [
   {
     name: 'THE WRITTEN WORD',
     teaches: 'words',
+    foes: ['haris', 'katib', 'mahi'],
     brief: 'Three cells of fire across the only path, and one letter clears one cell. A word runs several letters at once, each one cell further LEFT, as Arabic is written — so compose three that can pour. But a word BREAKS at any letter that never joins what follows: put alif anywhere but last and you will lose the rest of it.',
     letters: ['ج', 'ن', 'م', 'ا'],
     map: [
@@ -164,6 +172,7 @@ const CHAMBERS = [
   {
     name: 'THE WHOLE ART',
     teaches: 'all of them',
+    foes: ['haris', 'mahi', 'katib', 'haris'],
     brief: 'No instruction this time. A ward, a chasm and a ledge, and every letter you have been taught. Work out the order.',
     letters: ['ا', 'م', 'ر', 'ج', 'ب'],
     map: [
@@ -181,6 +190,137 @@ const CHAMBERS = [
     ]
   }
 ];
+
+// ===================================================================
+// THE THREE THAT COME FOR YOU
+//
+// This is an action game before it is a puzzle, and an editor is only
+// interesting under pressure. So the world fights back, and two of the
+// three fight the EDITOR rather than the player — which is the point:
+// you are in an argument with something else that can also rewrite the
+// world, and you have to out-write it.
+//
+//   HARIS   the guard  — runs you down. Straightforward, and shootable.
+//   MAHI    the eraser — hunts your most recent edit and UNMAKES it.
+//                        Ignores you entirely. Kill it or lose your work.
+//   KATIB   the scribe — keeps its distance and writes walls in your way.
+//
+// Named for what they do: haris a guard, mahi an effacer, katib a writer.
+// ===================================================================
+const FOE_KINDS = {
+  haris: { name: 'ḤĀRIS', gloss: 'the guard', glyph: 'ح', hp: 2, speed: 74,
+           color: '#b5342a', harms: true,
+           teach: 'runs you down. Shoot it.' },
+  mahi:  { name: 'MĀḤĪ',  gloss: 'the eraser', glyph: 'م', hp: 3, speed: 62,
+           color: '#8f6fd9', harms: false,
+           teach: 'hunts what you have written and unmakes it. It will not touch you — it does not have to.' },
+  katib: { name: 'KĀTIB', gloss: 'the scribe', glyph: 'ك', hp: 2, speed: 46,
+           color: '#c9a227', harms: true,
+           teach: 'keeps its distance and writes walls across your path.' }
+};
+
+function spawnFoe(kind, x, y) {
+  const k = FOE_KINDS[kind];
+  if (!k) return null;
+  const f = { kind: kind, def: k, x: x, y: y, vx: 0, vy: 0,
+              hp: k.hp, maxHp: k.hp, r: CELL * 0.3, t: Math.random() * 3,
+              cool: 1 + Math.random(), flash: 0, target: null };
+  foes.push(f);
+  return f;
+}
+
+function updateFoes(dt) {
+  for (let i = foes.length - 1; i >= 0; i--) {
+    const f = foes[i];
+    f.t += dt; f.cool -= dt;
+    if (f.flash > 0) f.flash -= dt;
+    if (f.hp <= 0) {
+      for (let k = 0; k < 10; k++) burst(f.x, f.y, f.def.color);
+      foes.splice(i, 1); state.kills++;
+      continue;
+    }
+
+    if (f.kind === 'haris') {
+      // straight at you, over the ground
+      const dx = Math.sign(player.x - f.x);
+      f.x += dx * f.def.speed * dt;
+      f.vy += 900 * dt;
+      const ny = f.y + f.vy * dt;
+      if (isSolid(at(world, Math.floor(f.x / CELL), Math.floor((ny + f.r) / CELL)))) {
+        f.y = Math.floor((ny + f.r) / CELL) * CELL - f.r - 0.01; f.vy = 0;
+        // hop a step
+        if (isSolid(at(world, Math.floor((f.x + dx * f.r * 1.4) / CELL), Math.floor(f.y / CELL)))) f.vy = -330;
+      } else f.y = ny;
+
+    } else if (f.kind === 'mahi') {
+      // drift to the newest edit and undo it. It floats; walls do not stop it.
+      if (!f.target || !state.recent.length ||
+          state.recent.indexOf(f.target) < 0) f.target = state.recent[state.recent.length - 1] || null;
+      const t = f.target;
+      if (t) {
+        const tx = t.x * CELL + CELL / 2, ty = t.y * CELL + CELL / 2;
+        const d = Math.hypot(tx - f.x, ty - f.y);
+        if (d < 8) {
+          setAt(world, t.x, t.y, t.from);
+          state.recent.splice(state.recent.indexOf(t), 1);
+          state.undone++;
+          f.target = null; f.cool = 0.5;
+          for (let k = 0; k < 8; k++) burst(tx, ty, '#8f6fd9');
+          HELP.say('<b>MĀḤĪ</b> unmade what you wrote — kill it or it will take the rest', 3);
+        } else {
+          f.x += (tx - f.x) / d * f.def.speed * dt;
+          f.y += (ty - f.y) / d * f.def.speed * dt;
+        }
+      } else {
+        // nothing to erase: circle the player, waiting
+        f.x += Math.cos(f.t * 0.8) * 40 * dt;
+        f.y += Math.sin(f.t * 0.8) * 26 * dt;
+      }
+
+    } else if (f.kind === 'katib') {
+      // hold off at range and write a wall in front of the player
+      const want = player.x - Math.sign(player.x - f.x) * CELL * 5;
+      f.x += Math.sign(want - f.x) * f.def.speed * dt;
+      f.y += Math.sin(f.t * 1.1) * 30 * dt;
+      if (f.cool <= 0) {
+        f.cool = 3.2;
+        const cx = Math.floor(player.x / CELL) + (player.face > 0 ? 2 : -2);
+        const cy = Math.floor(player.y / CELL);
+        if (!isSolid(at(world, cx, cy))) {
+          setAt(world, cx, cy, T.STONE);
+          for (let k = 0; k < 5; k++) burst(cx * CELL + CELL / 2, cy * CELL + CELL / 2, '#c9a227');
+        }
+      }
+    }
+
+    // it reaches you
+    if (f.def.harms && player.invuln <= 0 &&
+        Math.hypot(f.x - player.x, f.y - player.y) < f.r + player.r) {
+      hurt(f.def.name + ' struck you');
+    }
+  }
+
+  // pressure: a chamber keeps sending them
+  state.spawnT -= dt;
+  if (state.spawnT <= 0 && foes.length < 3) {
+    state.spawnT = 9;
+    const ch = CHAMBERS[state.chamber];
+    const kinds = ch.foes || ['haris'];
+    const kind = kinds[Math.floor(Math.random() * kinds.length)];
+    const side = Math.random() < 0.5 ? -1 : 1;
+    spawnFoe(kind, player.x + side * viewW() * 0.55, CELL * 2);
+  }
+}
+
+function hurt(why) {
+  if (player.invuln > 0 || state.over) return;
+  state.hp--;
+  player.invuln = 1.9;
+  state.shake = 11;
+  for (let k = 0; k < 12; k++) burst(player.x, player.y, '#b5342a');
+  if (state.hp <= 0) { die(why); state.hp = state.maxHp; }
+  else HELP.say('<b>' + why + '</b> — ' + state.hp + ' left', 2.4);
+}
 
 // ===================================================================
 // Loading a chamber
@@ -217,6 +357,10 @@ function loadChamber(i) {
 
   state.held = []; state.sel = 0; state.breath = 100;
   state.word = []; state.composing = false;
+  state.hp = state.maxHp; state.recent = []; state.spawnT = 3.5; state.undone = 0;
+  foes = [];
+  // the room starts with one already in it, so the pressure is immediate
+  if ((ch.foes || []).length) spawnFoe(ch.foes[0], viewW() * 0.8, CELL * 2);
   state.over = false; state.won = false; state.running = true;
   camX = 0;
   syncHeld();
@@ -252,6 +396,12 @@ function planAt(cx, cy) {
   return planEdit(world, L, L.primitives[0], cx, cy);
 }
 
+// the eraser hunts these, newest first
+function remember(ch) {
+  state.recent.push({ x: ch.x, y: ch.y, from: ch.from, to: ch.to });
+  if (state.recent.length > 40) state.recent.shift();
+}
+
 function commitEdit() {
   const c = cursorCell();
 
@@ -265,7 +415,7 @@ function commitEdit() {
       return;
     }
     state.breath -= plan.cost;
-    for (const ch of plan.changes) { setAt(world, ch.x, ch.y, ch.to); burst(ch.x*CELL+CELL/2, ch.y*CELL+CELL/2, PAL.gold); }
+    for (const ch of plan.changes) { setAt(world, ch.x, ch.y, ch.to); remember(ch); burst(ch.x*CELL+CELL/2, ch.y*CELL+CELL/2, PAL.gold); }
     state.editsMade++;
     state.shake = 7;
     HELP.say('<b>' + plan.spelling + '</b> — ' + plan.why, 5);
@@ -292,6 +442,7 @@ function commitEdit() {
     return;
   }
   state.breath -= cost;
+  for (const ch of plan.changes) remember(ch);
   const n = applyEdit(world, plan);
   state.editsMade++;
   state.shake = 5;
@@ -404,8 +555,8 @@ function update(dt) {
 
   // hazards and the void
   const under = at(world, Math.floor(player.x / CELL), Math.floor(player.y / CELL));
-  if (under === T.HAZARD && player.invuln <= 0) die('the hazard took you');
-  if (player.y > world.rows * CELL + 60) die('you fell out of the world');
+  if (under === T.HAZARD) hurt('the fire took you');
+  if (player.y > world.rows * CELL + 60) { state.hp = 1; hurt('you fell out of the world'); }
 
   // the gate
   if (under === T.GATE) win();
@@ -420,6 +571,17 @@ function update(dt) {
     const s = shots[i];
     s.x += s.vx * dt; s.life -= dt;
     if (s.life <= 0) { shots.splice(i, 1); continue; }
+    // a shot hits a foe before it hits the wall behind it
+    let hitFoe = false;
+    for (const f of foes) {
+      if (Math.hypot(f.x - s.x, f.y - s.y) < f.r + 5) {
+        f.hp--; f.flash = 0.2;
+        burst(s.x, s.y, f.def.color);
+        shots.splice(i, 1); hitFoe = true; break;
+      }
+    }
+    if (hitFoe) continue;
+
     const tx = Math.floor(s.x / CELL), ty = Math.floor(s.y / CELL);
     const t = at(world, tx, ty);
     if (t === T.STONE || t === T.GLASS) {
@@ -434,6 +596,9 @@ function update(dt) {
     }
   }
 
+  // ---- the enemies ----
+  updateFoes(dt);
+
   // ---- letter tiles ----
   for (const tl of tiles) {
     if (tl.taken) continue;
@@ -443,9 +608,12 @@ function update(dt) {
       state.held.push(tl.letter);
       state.sel = state.held.length - 1;
       syncHeld();
-      showLetter(tl.letter);
+      // NOT showLetter() — that opens a card and freezes the world, which is
+      // the wrong thing to do to somebody who is being chased. The narrator
+      // says it instead, and the card is a click away on the tile.
       HELP.say('took <b>' + tl.letter.glyph + ' ' + tl.letter.name + '</b> — ' +
-               tl.letter.primitives.map(p => OP_INFO[p].verb).join(', '), 5);
+               tl.letter.primitives.map(p => OP_INFO[p].verb).join(', ') +
+               ' &nbsp;<span style="opacity:.7">(click the tile to read it)</span>', 5);
     }
   }
 
@@ -646,6 +814,36 @@ function draw() {
   }
   ctx.globalAlpha = 1;
 
+  // the enemies
+  for (const f of foes) {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    ctx.fillStyle = f.flash > 0 ? '#ffffff' : f.def.color;
+    ctx.globalAlpha = 0.92;
+    ctx.beginPath(); ctx.arc(0, 0, f.r, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#0d0f12';
+    ctx.font = Math.round(f.r * 1.15) + 'px "Times New Roman", serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(f.def.glyph, 0, 1);
+    if (f.maxHp > 1) {
+      ctx.fillStyle = 'rgba(0,0,0,.55)';
+      ctx.fillRect(-f.r, -f.r - 6, f.r * 2, 3);
+      ctx.fillStyle = f.def.color;
+      ctx.fillRect(-f.r, -f.r - 6, f.r * 2 * Math.max(0, f.hp) / f.maxHp, 3);
+    }
+    ctx.restore();
+    // the eraser draws a line to what it is coming for
+    if (f.kind === 'mahi' && f.target) {
+      ctx.strokeStyle = 'rgba(143,111,217,.55)';
+      ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y);
+      ctx.lineTo(f.target.x * CELL + CELL / 2, f.target.y * CELL + CELL / 2);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+
   // the player
   ctx.save();
   ctx.translate(player.x, player.y);
@@ -697,6 +895,15 @@ function syncHeld() {
 }
 
 function syncHUD() {
+  const hp = $('hearts');
+  if (hp) {
+    let h = '';
+    for (let i = 0; i < state.maxHp; i++) h += '<i class="' + (i < state.hp ? 'on' : '') + '"></i>';
+    hp.innerHTML = h;
+  }
+  const fc = $('foeCount');
+  if (fc) fc.textContent = foes.length ? foes.length + ' hunting' : '—';
+
   // the word being composed
   const wb = $('wordBar');
   if (state.composing && state.word.length) {
@@ -912,6 +1119,7 @@ requestAnimationFrame(function (t) { last = t; requestAnimationFrame(frame); });
 window.LS = {
   get state(){ return state; }, get world(){ return world; }, get player(){ return player; },
   get tiles(){ return tiles; }, get LETTERS(){ return LETTERS; }, get keys(){ return keys; },
+  get foes(){ return foes; }, spawnFoe: spawnFoe, FOE_KINDS: FOE_KINDS,
   loadChamber: loadChamber, planAt: planAt, commitEdit: commitEdit, frame: frame,
   compose: (gl) => { const L = BY_GLYPH[gl]; if (L) { state.composing = true; state.word.push(L); } },
   start: start, CHAMBERS: CHAMBERS, showLetter: showLetter,

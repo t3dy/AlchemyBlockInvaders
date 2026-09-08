@@ -199,11 +199,47 @@ letter, which defeated the point:
   fire has no grain, and while it did cascade, one alif opened the whole field and did a word's
   work.
 
+
+## It is an action game first
+
+Ted's correction, and it was right: the first build was a puzzle game with a gun in it. An
+editor is only interesting **under pressure**, so the world fights back — and two of the three
+things that come for you fight the *editor* rather than the player. That is the whole idea:
+you are in an argument with something else that can also rewrite the world, and you have to
+out-write it.
+
+| | | what it does |
+|---|---|---|
+| **ḤĀRIS** ح | the guard | runs you down. Straightforward, and shootable. This is the clock. |
+| **MĀḤĪ** م | the eraser | **hunts your most recent edit and unmakes it.** It will not touch you — it does not have to. It draws a dashed line to what it is coming for, so the threat is readable. |
+| **KĀTIB** ك | the scribe | keeps its distance and writes walls across your path. |
+
+Named for what they do: *ḥāris* a guard, *māḥī* an effacer, *kātib* a writer.
+
+**What this changes about the editing.** Every edit is now a bet on time. Cutting a ward takes
+one letter, but the MĀḤĪ will restore it in seconds, so you must either work faster than it or
+kill it first — and killing it means stopping editing. The chambers escalate: chamber 1 has one
+guard; the finale has four of all three kinds.
+
+**Verified:** a player who stands still dies five times in thirty seconds; a player who turns
+and shoots gets five kills, no deaths and full health over forty. The difficulty rewards
+playing, which is the test. The eraser was watched restoring a ward 0.3 seconds after reaching
+it.
+
+### What had to go for this to be an action game
+
+**Picking up a letter no longer opens a card.** It opened a full-screen explanation that froze
+the world, which is the wrong thing to do to somebody being chased. The narrator says what the
+letter does instead, and the card is one click away on the tile. The teaching is unchanged; it
+just no longer stops the game to deliver it.
+
+**A hit costs a heart rather than resetting you.** Three hearts, generous invulnerability
+frames, and death returns you to the entrance **with your edits intact** — the world you built
+stands, which keeps a long chamber from punishing you twice.
+
 ## Known limits
 
-- **No enemies yet.** The shooter half is currently only the gun and the terrain; the tension
-  comes from hazards and from falling. Enemies that damage the world, or that repair it behind
-  you, are the obvious next thing and would make the editor matter under pressure.
+- **Three enemy kinds, no boss.** Enough for pressure; not enough for a fight with a shape.
 - **Seven chambers.** ASSIMILATE and DISTINGUISH still have no chamber of their own.
 - **The bot's platforming is crude**, so the end-to-end playthrough proves the mechanics and
   the gate rather than a clean human run.

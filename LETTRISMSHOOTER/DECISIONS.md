@@ -46,6 +46,30 @@
 - **Two new chambers**: THE TERRACE for RAISE, which had no chamber, and THE WRITTEN WORD, which
   is verified to have *no* single-letter solution.
 
+## 2026-09-08 — action first
+
+Ted: *"remember this is an action game first and foremost."* Correct, and the first two builds
+were not. What changed:
+
+- **Three enemy kinds, and two of them fight the EDITOR.** The MĀḤĪ unmakes your most recent
+  edit; the KĀTIB writes walls in your way. Only the ḤĀRIS simply chases. Enemies that merely
+  chased would have made this an action game with a puzzle bolted on; enemies that rewrite the
+  world make the editing itself the fight.
+- **Every edit is a bet on time.** The MĀḤĪ restores a cut ward in seconds, so you either work
+  faster than it or stop to kill it. That tension did not exist before and it is the reason to
+  play.
+- **Picking up a letter no longer freezes the world.** A full-screen card is the wrong thing to
+  put in front of somebody being chased. The narrator carries the same information and the card
+  is a click away.
+- **Hearts, not instant resets.** Three, with generous invulnerability, and death keeps your
+  edits — the world you built stands.
+- **Tuned down from the first pass:** three concurrent enemies rather than five, slower guards,
+  longer spawn interval. A stationary player was dying five times in thirty seconds, which is
+  not difficulty, it is a mobbing.
+- **Enemies cannot lock a chamber.** The eraser only ever restores a tile to its original state
+  and the scribe's walls are ordinary stone, which a shot opens. Neither can make a room
+  unwinnable.
+
 ## Open questions for Ted
 
 - **Should the traditions' own attributions be shown beside the form-derived ones?** TurkaGame's
